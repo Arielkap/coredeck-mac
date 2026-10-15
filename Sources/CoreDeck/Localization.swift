@@ -135,7 +135,7 @@ public struct L10n {
         case .criticalLoad: return "CRITICAL LOAD"
             
         case .activateProTitle: return "ACTIVATE COREDECK PRO (LIFETIME)"
-        case .activateProDesc: return "Unlock instant process termination, AI VRAM ejector, and remote VPS telemetry."
+        case .activateProDesc: return "Unlock instant process termination, universal VRAM & memory purger, and remote VPS telemetry."
         case .licenseKeyPlaceholder: return "Enter license key (e.g. CORE-XXXX-XXXX)"
         case .activateBtn: return "Activate"
         case .buyLicensePrompt: return "Don't have a key? Buy lifetime license ($14.99) →"
@@ -164,8 +164,8 @@ public struct L10n {
             
         case .flushCache: return "Flush Cache"
         case .flushCachePro: return "Flush Cache [PRO]"
-        case .ejectAi: return "Eject AI VRAM"
-        case .ejectAiPro: return "Eject AI [PRO]"
+        case .ejectAi: return "Purge VRAM & Cache"
+        case .ejectAiPro: return "Purge VRAM [PRO]"
             
         case .vpsTelemetryTitle: return "REMOTE VPS TELEMETRY"
         case .closeBtn: return "Close"
@@ -219,7 +219,7 @@ public struct L10n {
         case .criticalLoad: return "KRYTYCZNY"
             
         case .activateProTitle: return "AKTYWUJ COREDECK PRO (DOŻYWOTNIA)"
-        case .activateProDesc: return "Odblokuj natychmiastowe zabijanie procesów, wyrzutnik modeli AI (VRAM) i telemetrię serwerów VPS."
+        case .activateProDesc: return "Odblokuj natychmiastowe zabijanie procesów, zwalnianie pamięci VRAM/Cache i telemetrię serwerów VPS."
         case .licenseKeyPlaceholder: return "Wpisz klucz (np. CORE-XXXX-XXXX)"
         case .activateBtn: return "Aktywuj"
         case .buyLicensePrompt: return "Nie masz klucza? Kup dożywotnią licencję ($14.99) →"
@@ -248,8 +248,8 @@ public struct L10n {
             
         case .flushCache: return "Wyczyść Cache"
         case .flushCachePro: return "Wyczyść Cache [PRO]"
-        case .ejectAi: return "Wyrzuć AI (VRAM)"
-        case .ejectAiPro: return "Wyrzuć AI [PRO]"
+        case .ejectAi: return "Zwolnij VRAM & Cache"
+        case .ejectAiPro: return "Zwolnij VRAM [PRO]"
             
         case .vpsTelemetryTitle: return "TELEMETRIA SERWERA VPS"
         case .closeBtn: return "Zamknij"

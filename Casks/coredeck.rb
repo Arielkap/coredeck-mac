@@ -1,6 +1,6 @@
 cask "coredeck" do
   version "2.0.0"
-  sha256 "f64fa30258fe83447c9bb49d7f816418de1d8a528de8d7f0399049daca8f4e3c"
+  sha256 "4f25f0942f72bbca08a6c201b806893422ca9cf0265d13558275a89fe7725dd1"
 
   url "https://armako.co.uk/coredeck/CoreDeck-Installer.dmg"
   name "CoreDeck"
@@ -13,7 +13,7 @@ cask "coredeck" do
   end
 
   auto_updates false
-  depends_on macos: ">= :ventura"
+  depends_on macos: :ventura
   depends_on arch: :arm64
 
   app "CoreDeck.app"

@@ -356,7 +356,7 @@ public final class AppState: ObservableObject {
             }
             
             if details.isEmpty {
-                self.statusMessage = language == .en ? "VRAM clean • No orphan Metal processes" : "VRAM czysty • Brak wiszących procesów Metal"
+                self.statusMessage = language == .en ? "Unified Memory & VRAM optimal" : "Pamięć Unified i VRAM zoptymalizowane"
             } else {
                 self.statusMessage = details.joined(separator: " • ")
             }
