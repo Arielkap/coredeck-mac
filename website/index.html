@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreDeck for macOS — Mission Control for Apple Silicon & Cloud Fleet</title>
+    <meta name="description" content="Ultra-lightweight macOS menu bar utility for Apple Silicon memory optimization, AI VRAM ejector, and real-time remote VPS telemetry.">
+    <style>
+        :root {
+            --bg: #090c10;
+            --card-bg: rgba(22, 27, 34, 0.7);
+            --card-border: rgba(56, 139, 253, 0.15);
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --cyan: #38bdf8;
+            --amber: #fbbf24;
+            --green: #34d399;
+            --red: #f87171;
+            --glow: rgba(56, 189, 248, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Ambient Glow Background */
+        .ambient-glow {
+            position: fixed;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: radial-gradient(circle, var(--glow) 0%, rgba(9, 12, 16, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        header {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 24px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .brand img {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            box-shadow: 0 0 15px var(--glow);
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-ghost {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            transition: color 0.2s;
+        }
+        .btn-ghost:hover {
+            color: var(--text-main);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 9px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
+        }
+
+        /* Hero */
+        .hero {
+            max-width: 860px;
+            margin: 80px auto 60px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--cyan);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        h1 {
+            font-size: 3.6rem;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #38bdf8 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.hero-sub {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 640px;
+            margin: 0 auto 36px;
+        }
+
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 14px 28px;
+            font-size: 1.05rem;
+            border-radius: 10px;
+        }
+
+        .btn-secondary {
+            background: var(--card-bg);
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            border: 1px solid var(--card-border);
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .meta-badges {
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        /* App Mockup Card */
+        .mockup-container {
+            max-width: 650px;
+            margin: 50px auto 100px;
+            padding: 0 20px;
+        }
+
+        .mockup-card {
+            background: #111622;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
+        }
+
+        .mockup-hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .mockup-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+        .mockup-bar-fill {
+            height: 100%;
+            width: 71%;
+            background: linear-gradient(90deg, var(--cyan), #2563eb);
+            border-radius: 4px;
+        }
+
+        /* Features Grid */
+        .features {
+            max-width: 1100px;
+            margin: 0 auto 120px;
+            padding: 0 20px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 28px;
+            transition: transform 0.2s, border-color 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(56, 189, 248, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-bottom: 18px;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Pricing */
+        .pricing {
+            max-width: 480px;
+            margin: 0 auto 120px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .pricing-card {
+            background: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(13, 17, 23, 0.9) 100%);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 20px;
+            padding: 40px 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15);
+        }
+
+        .price {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            margin: 20px 0 10px;
+        }
+
+        .price span {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .feature-list {
+            list-style: none;
+            text-align: left;
+            margin: 28px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 0.95rem;
+        }
+
+        .feature-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <header>
+        <div class="brand">
+            <img src="icon.jpg" alt="CoreDeck Icon">
+            <span>CoreDeck</span>
+        </div>
+        <div class="nav-actions">
+            <a href="#features" class="btn-ghost">Features</a>
+            <a href="#pricing" class="btn-ghost">Pricing</a>
+            <a href="CoreDeck-Installer.dmg" class="btn-primary" download>Download .DMG</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="badge">⚡ Native Swift 6 • Apple Silicon Optimized</div>
+            <h1>Mission Control for <span>Apple Silicon & Cloud</span>.</h1>
+            <p class="hero-sub">
+                Tame unified memory thrashing, eject bloated AI models from VRAM in one click, and monitor your remote VPS fleet directly from your Mac menu bar.
+            </p>
+            <div class="cta-group">
+                <a href="CoreDeck-Installer.dmg" class="btn-primary btn-large" download>
+                    Download CoreDeck for Mac (768 KB)
+                </a>
+                <a href="#pricing" class="btn-secondary btn-large">
+                    Buy Lifetime License — $14.99
+                </a>
+            </div>
+            <div class="meta-badges">
+                <span>✓ macOS 13+ (Sonoma, Sequoia)</span>
+                <span>✓ 0.0% Idle CPU</span>
+                <span>✓ Zero Electron Bloat</span>
+            </div>
+        </section>
+
+        <!-- Live Mockup -->
+        <section class="mockup-container">
+            <div class="mockup-card">
+                <div class="mockup-header">
+                    <span style="color: var(--cyan); font-weight: bold;">⚡ COREDECK M2 PRO</span>
+                    <span style="background: rgba(52, 211, 153, 0.15); color: var(--green); padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">OPTIMAL 🟢</span>
+                </div>
+                <div class="mockup-hud-row">
+                    <span>UNIFIED MEMORY</span>
+                    <span style="color: #fff; font-weight: bold;">11.4 / 16.0 GB (71%)</span>
+                </div>
+                <div class="mockup-bar">
+                    <div class="mockup-bar-fill"></div>
+                </div>
+                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                    <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 8px; border-radius: 6px;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">SWAP USED</div>
+                        <div style="font-size: 0.95rem; font-weight: bold; color: var(--amber);">0.20 GB</div>
+                    </div>
+                    <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 8px; border-radius: 6px;">
+                        <div style="font-size: 0.7rem; color: var(--text-muted);">FREE DISK</div>
+                        <div style="font-size: 0.95rem; font-weight: bold; color: #fff;">35.4 GB</div>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px; margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">TOP MEMORY CONSUMERS</div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                        <span>🤖 Ollama (Llama 3)</span>
+                        <span style="color: var(--amber); font-weight: bold;">4.20 GB <span style="background: rgba(248,113,113,0.2); color: var(--red); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">KILL</span></span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                        <span>🌐 Arc Browser</span>
+                        <span style="color: var(--amber); font-weight: bold;">1.15 GB <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">TERM</span></span>
+                    </div>
+                </div>
+                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px;">
+                    <div style="font-size: 0.75rem; color: var(--cyan); font-weight: bold; margin-bottom: 4px;">🛰️ PRODUCTION VPS NODE: ONLINE 🟢</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>RAM: 1.1/7.9G</span>
+                        <span>LOAD: 1.04</span>
+                        <span>UPTIME: 5d 18h</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section class="features" id="features">
+            <div class="section-header">
+                <h2>Engineered for Power Users</h2>
+                <p style="color: var(--text-muted);">Built from the ground up to solve modern Apple Silicon development pains.</p>
+            </div>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="card-icon">🧠</div>
+                    <h3>Darwin Mach Kernel Telemetry</h3>
+                    <p>Direct low-level calls to <code>host_statistics64</code> and <code>sysctl vm.swapusage</code>. Sub-millisecond accuracy without heating up your CPU.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🤖</div>
+                    <h3>AI VRAM Model Ejector</h3>
+                    <p>Running Ollama or local LLMs? Eject idle models instantly with one click via local API to reclaim up to 16 GB of unified memory instantly.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🛰️</div>
+                    <h3>Remote VPS Fleet Heartbeat</h3>
+                    <p>Live Linux telemetry delivered straight to your macOS menu bar. Check your server's RAM, CPU load, and disk health without opening SSH.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🚨</div>
+                    <h3>Instant Process Term / Kill</h3>
+                    <p>Pinpoint memory hogs immediately. Send graceful SIGTERM or forced SIGKILL directly from your menu bar dropdown.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">⚡</div>
+                    <h3>768 KB Native Binary</h3>
+                    <p>No Python runtime, no 200 MB Electron baggage. Written purely in native Swift 6 and SwiftUI. Starts in under 50 milliseconds.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">🚀</div>
+                    <h3>Launch at Login</h3>
+                    <p>Integrated with modern macOS <code>SMAppService</code>. Runs quietly in the background without cluttering your Dock.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing -->
+        <section class="pricing" id="pricing">
+            <div class="pricing-card">
+                <div class="badge">Lifetime Ownership</div>
+                <h3>CoreDeck Pro</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">No subscriptions. Buy once, use forever.</p>
+                <div class="price">$14.99 <span>one-time</span></div>
+
+                <ul class="feature-list">
+                    <li>Native Apple Silicon binary (M1/M2/M3/M4)</li>
+                    <li>Ollama & AI VRAM Model Purger</li>
+                    <li>Remote VPS Node Telemetry Integration</li>
+                    <li>Instant Process Killer (TERM / KILL)</li>
+                    <li>Launch at Login support</li>
+                    <li>All future minor & major updates included</li>
+                </ul>
+
+                <a href="CoreDeck-Installer.dmg" class="btn-primary btn-large" style="display: block;" download>
+                    Download Free Evaluation DMG
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© 2026 CoreDeck by Ariel Kapitkowski. All rights reserved. Crafted with Beskar precision.</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,22 @@
+
+DIRECT PITCH TO MAC YOUTUBERS / TECH CURATORS
+============================================
+
+Subject: Fast Mac utility: CoreDeck (768 KB Swift 6 HUD with Ollama VRAM killer)
+
+Hi [Name],
+
+Been following your channel and love your Mac workflow & utility videos.
+
+I built a tiny (768 KB) native macOS menu bar app called **CoreDeck** designed specifically for power users on Apple Silicon. 
+
+Beyond standard RAM/Swap monitoring, its killer feature is an **Instant AI VRAM Ejector** (unloading idle Ollama / local LLM models from GPU memory with one click) and **Remote VPS server monitoring** in the same HUD.
+
+I'd love to send you a lifetime VIP license if you'd like to check it out:
+- Download & Website: https://armako.co.uk/coredeck/
+- VIP Key: `CORE-VIP-J6W5-SKBH-FBNH`
+
+Keep up the great content!
+
+Best,
+Ariel Kapitkowski

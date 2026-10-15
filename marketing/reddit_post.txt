@@ -1,0 +1,39 @@
+
+REDDIT r/macapps & r/SideProject LAUNCH POST
+============================================
+
+Title: I was tired of bloated system monitors, so I built CoreDeck — a 768 KB native Swift 6 HUD for Apple Silicon with an Ollama VRAM ejector (50 Free Lifetime Keys)
+
+Hey r/macapps! 👋
+
+I'm an indie developer working on Apple Silicon. Like many of you, I run local AI models (Ollama) and heavy dev tools. My biggest frustration was seeing my unified memory get chewed up by idle background models and memory hogs, causing swap thrashing on the SSD.
+
+Most existing system monitors either just show static numbers or are built on Electron/Python bundles taking 150+ MB.
+
+So I built **CoreDeck** in pure Swift 6 and SwiftUI:
+
+### ⚡ What it does:
+1. **Low-Level Darwin Kernel Telemetry:** Reads Wired, Active, and Compressed pages directly via `host_statistics64` and `sysctl vm.swapusage` in sub-milliseconds.
+2. **AI VRAM Model Ejector:** Connects to your local Ollama instance and cleanly unloads idle models from GPU memory with a single click.
+3. **Remote VPS Fleet Node:** Monitors your remote Linux VPS/servers directly in the same macOS dropdown (RAM, load average, disk, uptime).
+4. **Instant Process Killer:** Direct SIGTERM and forced SIGKILL buttons for top memory hogs.
+5. **Ultra-Lightweight:** 768 KB total binary size, 0.0% idle CPU.
+
+### 🎁 Free Lifetime Pro Keys for Reddit:
+CoreDeck has a free evaluation version, but here are 10 free Lifetime Pro VIP keys for you guys:
+
+- `CORE-VIP-69G3-3N04-X2Q3`
+- `CORE-VIP-FF12-9X1N-1RM1`
+- `CORE-VIP-5SH9-DHIL-QXEB`
+- `CORE-VIP-Z0U9-63RP-SVI7`
+- `CORE-VIP-G827-B30C-DOU3`
+- `CORE-VIP-KZKQ-FM43-NFLJ`
+- `CORE-VIP-J61E-CL11-3CIF`
+- `CORE-VIP-3OSG-4QCO-ZBVH`
+- `CORE-VIP-T0HM-GQV1-X014`
+- `CORE-VIP-TFTP-MVDA-W4X7`
+
+👉 Download the DMG: [https://armako.co.uk/coredeck/](https://armako.co.uk/coredeck/)
+⭐ GitHub Repo: [https://github.com/Arielkap/coredeck-mac](https://github.com/Arielkap/coredeck-mac)
+
+Would love to hear your feedback and feature requests!
