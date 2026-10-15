@@ -161,7 +161,7 @@ public struct CoreDeckView: View {
                     HStack {
                         Spacer()
                         Button {
-                            if let url = URL(string: "https://coredeck.app/#pricing") {
+                            if let url = URL(string: "https://armako.co.uk/coredeck/#pricing") {
                                 NSWorkspace.shared.open(url)
                             }
                         } label: {

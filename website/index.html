@@ -1,508 +1,397 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CoreDeck for macOS — Mission Control for Apple Silicon & Cloud Fleet</title>
-    <meta name="description" content="Ultra-lightweight macOS menu bar utility for Apple Silicon memory optimization, AI VRAM ejector, and real-time remote VPS telemetry.">
-    <style>
-        :root {
-            --bg: #090c10;
-            --card-bg: rgba(22, 27, 34, 0.7);
-            --card-border: rgba(56, 139, 253, 0.15);
-            --text-main: #f0f6fc;
-            --text-muted: #8b949e;
-            --cyan: #38bdf8;
-            --amber: #fbbf24;
-            --green: #34d399;
-            --red: #f87171;
-            --glow: rgba(56, 189, 248, 0.25);
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CoreDeck — Apple Silicon & Remote VPS HUD for Mac</title>
+  <meta name="description" content="Ultra-lightweight Apple Silicon HUD. Eject AI VRAM with 1-click. Monitor remote Hostinger & Linux VPS nodes in 15ms. Zero Electron. 768 KB native Swift 6.">
+  
+  <!-- Favicon & Fonts -->
+  <link rel="icon" type="image/png" href="app-icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            deckDark: '#07090e',
+            deckCard: '#0d111a',
+            deckBorder: '#1e2638',
+          }
         }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            overflow-x: hidden;
-            line-height: 1.6;
-        }
-
-        /* Ambient Glow Background */
-        .ambient-glow {
-            position: fixed;
-            top: -200px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 800px;
-            height: 600px;
-            background: radial-gradient(circle, var(--glow) 0%, rgba(9, 12, 16, 0) 70%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        header {
-            max-width: 1100px;
-            margin: 0 auto;
-            padding: 24px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: 800;
-            font-size: 1.1rem;
-            letter-spacing: -0.5px;
-        }
-
-        .brand img {
-            width: 38px;
-            height: 38px;
-            border-radius: 9px;
-            box-shadow: 0 0 15px var(--glow);
-        }
-
-        .nav-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-ghost {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            padding: 8px 16px;
-            transition: color 0.2s;
-        }
-        .btn-ghost:hover {
-            color: var(--text-main);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 9px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
-            transition: all 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
-        }
-
-        /* Hero */
-        .hero {
-            max-width: 860px;
-            margin: 80px auto 60px;
-            text-align: center;
-            padding: 0 20px;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            border-radius: 100px;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--cyan);
-            margin-bottom: 24px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        h1 {
-            font-size: 3.6rem;
-            font-weight: 900;
-            letter-spacing: -1.5px;
-            line-height: 1.1;
-            margin-bottom: 20px;
-        }
-
-        h1 span {
-            background: linear-gradient(135deg, #38bdf8 0%, #fbbf24 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        p.hero-sub {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            max-width: 640px;
-            margin: 0 auto 36px;
-        }
-
-        .cta-group {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-large {
-            padding: 14px 28px;
-            font-size: 1.05rem;
-            border-radius: 10px;
-        }
-
-        .btn-secondary {
-            background: var(--card-bg);
-            color: var(--text-main);
-            text-decoration: none;
-            font-weight: 600;
-            border: 1px solid var(--card-border);
-            transition: all 0.2s;
-        }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .meta-badges {
-            margin-top: 16px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
-        /* App Mockup Card */
-        .mockup-container {
-            max-width: 650px;
-            margin: 50px auto 100px;
-            padding: 0 20px;
-        }
-
-        .mockup-card {
-            background: #111622;
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(56, 189, 248, 0.1);
-            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        }
-
-        .mockup-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            margin-bottom: 16px;
-        }
-
-        .mockup-hud-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 0.9rem;
-        }
-
-        .mockup-bar {
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 18px;
-        }
-        .mockup-bar-fill {
-            height: 100%;
-            width: 71%;
-            background: linear-gradient(90deg, var(--cyan), #2563eb);
-            border-radius: 4px;
-        }
-
-        /* Features Grid */
-        .features {
-            max-width: 1100px;
-            margin: 0 auto 120px;
-            padding: 0 20px;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 60px;
-        }
-
-        .section-header h2 {
-            font-size: 2.4rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            margin-bottom: 12px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 28px;
-            transition: transform 0.2s, border-color 0.2s;
-            backdrop-filter: blur(10px);
-        }
-        .card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(56, 189, 248, 0.4);
-        }
-
-        .card-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 10px;
-            background: rgba(56, 189, 248, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            margin-bottom: 18px;
-        }
-
-        .card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .card p {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        /* Pricing */
-        .pricing {
-            max-width: 480px;
-            margin: 0 auto 120px;
-            padding: 0 20px;
-            text-align: center;
-        }
-
-        .pricing-card {
-            background: linear-gradient(180deg, rgba(22, 27, 34, 0.9) 0%, rgba(13, 17, 23, 0.9) 100%);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            border-radius: 20px;
-            padding: 40px 32px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(56, 189, 248, 0.15);
-        }
-
-        .price {
-            font-size: 3.5rem;
-            font-weight: 900;
-            letter-spacing: -1.5px;
-            margin: 20px 0 10px;
-        }
-
-        .price span {
-            font-size: 1.1rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .feature-list {
-            list-style: none;
-            text-align: left;
-            margin: 28px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            font-size: 0.95rem;
-        }
-
-        .feature-list li {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .feature-list li::before {
-            content: "✓";
-            color: var(--cyan);
-            font-weight: bold;
-        }
-
-        footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 40px 20px;
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-    </style>
+      }
+    }
+  </script>
 </head>
-<body>
-    <div class="ambient-glow"></div>
+<body class="bg-deckDark text-slate-100 font-sans selection:bg-cyan-500 selection:text-black min-h-screen">
 
-    <header>
-        <div class="brand">
-            <img src="icon.jpg" alt="CoreDeck Icon">
-            <span>CoreDeck</span>
+  <!-- Background Gradients -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-[10%] left-[20%] w-[650px] h-[650px] bg-cyan-600/10 rounded-full blur-[140px]"></div>
+    <div class="absolute top-[35%] -right-[5%] w-[550px] h-[550px] bg-blue-600/10 rounded-full blur-[140px]"></div>
+    <div class="absolute -bottom-[10%] -left-[10%] w-[500px] h-[500px] bg-orange-600/8 rounded-full blur-[150px]"></div>
+  </div>
+
+  <!-- Navigation -->
+  <header class="relative z-20 border-b border-slate-800/80 backdrop-blur-md bg-deckDark/80 sticky top-0">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <img src="app-icon.png" alt="CoreDeck App Icon" class="w-9 h-9 rounded-xl shadow-lg shadow-cyan-500/20 object-contain">
+        <div class="flex items-center gap-2">
+          <span class="font-mono font-black tracking-wider text-base">COREDECK</span>
+          <span class="text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full">v2.0</span>
         </div>
-        <div class="nav-actions">
-            <a href="#features" class="btn-ghost">Features</a>
-            <a href="#pricing" class="btn-ghost">Pricing</a>
-            <a href="CoreDeck-Installer.dmg" class="btn-primary" download>Download .DMG</a>
+      </div>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm text-slate-400 font-medium">
+        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
+        <a href="#vps" class="hover:text-cyan-400 transition-colors">VPS Fleet</a>
+        <a href="#ai-vram" class="hover:text-cyan-400 transition-colors">AI VRAM</a>
+        <a href="#pricing" class="hover:text-cyan-400 transition-colors">Pricing</a>
+        <a href="#faq" class="hover:text-cyan-400 transition-colors">FAQ</a>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <a href="CoreDeck-Installer.dmg" download class="hidden sm:flex items-center gap-2 text-xs font-mono font-semibold px-4 py-2 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700 transition-all text-slate-200">
+          <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download DMG
+        </a>
+        <a href="#pricing" class="flex items-center gap-2 text-xs font-mono font-bold px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black shadow-lg shadow-yellow-500/15 transition-all">
+          ★ Get Pro ($14.99)
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <main class="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-24">
+    <div class="text-center pt-8 pb-12">
+      <!-- App Icon Showcase -->
+      <div class="relative inline-block mb-6">
+        <div class="absolute -inset-3 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-purple-500/30 rounded-3xl blur-xl opacity-80 animate-pulse"></div>
+        <img src="app-icon.png" alt="CoreDeck macOS App Icon" class="relative w-24 h-24 sm:w-28 sm:h-28 mx-auto rounded-3xl shadow-2xl border border-slate-700/60 object-contain transform hover:scale-105 transition-transform duration-300">
+      </div>
+
+      <div class="block">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-xs font-mono mb-6 backdrop-blur-md">
+          <span>✨ Built exclusively for Apple Silicon M1 / M2 / M3 / M4</span>
         </div>
-    </header>
+      </div>
 
-    <main>
-        <section class="hero">
-            <div class="badge">⚡ Native Swift 6 • Apple Silicon Optimized</div>
-            <h1>Mission Control for <span>Apple Silicon & Cloud</span>.</h1>
-            <p class="hero-sub">
-                Tame unified memory thrashing, eject bloated AI models from VRAM in one click, and monitor your remote VPS fleet directly from your Mac menu bar.
-            </p>
-            <div class="cta-group">
-                <a href="CoreDeck-Installer.dmg" class="btn-primary btn-large" download>
-                    Download CoreDeck for Mac (768 KB)
-                </a>
-                <a href="#pricing" class="btn-secondary btn-large">
-                    Buy Lifetime License — $14.99
-                </a>
+      <h1 class="text-4xl sm:text-6xl font-black tracking-tight max-w-4xl mx-auto leading-[1.1] text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-100 to-slate-400">
+        Apple Silicon & Remote Fleet HUD for your Mac menu bar.
+      </h1>
+
+      <p class="mt-6 text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+        Eject AI VRAM with 1-click. Kill runaway processes in 5ms. Monitor remote Hostinger & Linux VPS nodes via direct native SSH. <span class="text-cyan-400 font-semibold">Zero Electron. 768 KB native Swift 6.</span>
+      </p>
+
+      <!-- Buttons -->
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+        <a href="CoreDeck-Installer.dmg" download class="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm shadow-xl shadow-cyan-500/20 transition-all transform hover:-translate-y-0.5">
+          <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download Free DMG (2.9 MB)
+        </a>
+
+        <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-500/15 transition-all transform hover:-translate-y-0.5">
+          ★ Buy Pro Lifetime ($14.99)
+        </a>
+      </div>
+
+      <!-- Homebrew Snippet -->
+      <div class="mt-6 inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/90 border border-slate-800 text-xs font-mono text-slate-400">
+        <span class="text-cyan-400">❯</span>
+        <span class="text-slate-300">brew install --cask coredeck</span>
+        <button onclick="navigator.clipboard.writeText('brew install --cask coredeck'); this.innerText='Copied!';" class="ml-2 hover:text-white transition-colors text-slate-500 hover:text-slate-200">
+          Copy
+        </button>
+      </div>
+    </div>
+
+    <!-- HUD Visual Mockup Preview -->
+    <div class="relative my-10 max-w-lg mx-auto">
+      <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-orange-500/20 rounded-2xl blur-xl opacity-75"></div>
+      
+      <div class="relative rounded-2xl border border-slate-700/80 bg-deckCard/95 p-5 shadow-2xl backdrop-blur-2xl">
+        <!-- HUD Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+          <div class="flex items-center gap-2">
+            <img src="app-icon.png" class="w-5 h-5 rounded-md object-contain" alt="CoreDeck">
+            <span class="font-mono font-black text-xs text-white">COREDECK</span>
+            <span class="font-mono text-[9px] font-extrabold px-1.5 py-0.5 bg-yellow-400/20 text-yellow-300 rounded">PRO</span>
+            <span class="font-mono text-[9px] text-slate-400 ml-1">APPLE SILICON & FLEET HUD</span>
+          </div>
+          <div class="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 font-mono text-[9px] font-bold">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+            OPTIMAL
+          </div>
+        </div>
+
+        <!-- RAM Gauge -->
+        <div class="mt-4 p-3 rounded-xl bg-slate-900/70 border border-slate-800/60">
+          <div class="flex justify-between items-center text-xs font-mono">
+            <span class="text-slate-300 font-semibold flex items-center gap-1.5">
+              <span>🧠</span> Unified Memory (RAM)
+            </span>
+            <span class="font-bold text-white">14.2 / 32 GB <span class="text-slate-400">(44%)</span></span>
+          </div>
+          <div class="w-full bg-slate-800 rounded-full h-2 mt-2 overflow-hidden">
+            <div class="bg-gradient-to-r from-cyan-500 to-blue-500 h-2 rounded-full w-[44%]"></div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mt-3 pt-2 border-t border-slate-800/60">
+            <div class="p-1.5 bg-slate-800/30 rounded-lg">
+              <div class="text-[8px] font-mono text-slate-400 font-bold">SWAP USED</div>
+              <div class="text-xs font-mono font-bold text-slate-200">0.00 GB</div>
             </div>
-            <div class="meta-badges">
-                <span>✓ macOS 13+ (Sonoma, Sequoia)</span>
-                <span>✓ 0.0% Idle CPU</span>
-                <span>✓ Zero Electron Bloat</span>
+            <div class="p-1.5 bg-slate-800/30 rounded-lg">
+              <div class="text-[8px] font-mono text-slate-400 font-bold">FREE DISK</div>
+              <div class="text-xs font-mono font-bold text-slate-200">412.5 GB</div>
             </div>
-        </section>
+          </div>
+        </div>
 
-        <!-- Live Mockup -->
-        <section class="mockup-container">
-            <div class="mockup-card">
-                <div class="mockup-header">
-                    <span style="color: var(--cyan); font-weight: bold;">⚡ COREDECK M2 PRO</span>
-                    <span style="background: rgba(52, 211, 153, 0.15); color: var(--green); padding: 3px 8px; border-radius: 10px; font-size: 0.75rem;">OPTIMAL 🟢</span>
-                </div>
-                <div class="mockup-hud-row">
-                    <span>UNIFIED MEMORY</span>
-                    <span style="color: #fff; font-weight: bold;">11.4 / 16.0 GB (71%)</span>
-                </div>
-                <div class="mockup-bar">
-                    <div class="mockup-bar-fill"></div>
-                </div>
-                <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                    <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 8px; border-radius: 6px;">
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">SWAP USED</div>
-                        <div style="font-size: 0.95rem; font-weight: bold; color: var(--amber);">0.20 GB</div>
-                    </div>
-                    <div style="flex: 1; background: rgba(255,255,255,0.04); padding: 8px; border-radius: 6px;">
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">FREE DISK</div>
-                        <div style="font-size: 0.95rem; font-weight: bold; color: #fff;">35.4 GB</div>
-                    </div>
-                </div>
-                <div style="border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 12px; margin-bottom: 12px;">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">TOP MEMORY CONSUMERS</div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
-                        <span>🤖 Ollama (Llama 3)</span>
-                        <span style="color: var(--amber); font-weight: bold;">4.20 GB <span style="background: rgba(248,113,113,0.2); color: var(--red); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">KILL</span></span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-                        <span>🌐 Arc Browser</span>
-                        <span style="color: var(--amber); font-weight: bold;">1.15 GB <span style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">TERM</span></span>
-                    </div>
-                </div>
-                <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); padding: 10px; border-radius: 8px;">
-                    <div style="font-size: 0.75rem; color: var(--cyan); font-weight: bold; margin-bottom: 4px;">🛰️ PRODUCTION VPS NODE: ONLINE 🟢</div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
-                        <span>RAM: 1.1/7.9G</span>
-                        <span>LOAD: 1.04</span>
-                        <span>UPTIME: 5d 18h</span>
-                    </div>
-                </div>
+        <!-- Top Memory Consumers -->
+        <div class="mt-3 p-3 rounded-xl bg-slate-900/70 border border-slate-800/60 font-mono">
+          <div class="flex justify-between items-center text-[9px] text-slate-400 font-bold">
+            <span>TOP MEMORY CONSUMERS (PRO: 5)</span>
+            <span class="text-cyan-400">PID / ACTIONS</span>
+          </div>
+          <div class="space-y-1.5 mt-2">
+            <div class="flex items-center justify-between text-xs py-1 px-2 rounded bg-slate-800/40">
+              <div class="flex items-center gap-2">
+                <span>🦙</span>
+                <span class="text-slate-200 font-medium text-[11px]">ollama_llama_server</span>
+                <span class="text-[9px] text-slate-500">PID 8412</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-orange-400 font-bold text-[11px]">8.42 GB</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-200">TERM</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-red-600/80 text-white font-bold">KILL</span>
+              </div>
             </div>
-        </section>
-
-        <!-- Features -->
-        <section class="features" id="features">
-            <div class="section-header">
-                <h2>Engineered for Power Users</h2>
-                <p style="color: var(--text-muted);">Built from the ground up to solve modern Apple Silicon development pains.</p>
+            <div class="flex items-center justify-between text-xs py-1 px-2 rounded bg-slate-800/20">
+              <div class="flex items-center gap-2">
+                <span>🌐</span>
+                <span class="text-slate-200 font-medium text-[11px]">Google Chrome Helper</span>
+                <span class="text-[9px] text-slate-500">PID 2109</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-orange-400 font-bold text-[11px]">2.14 GB</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-200">TERM</span>
+                <span class="text-[9px] px-1.5 py-0.5 rounded bg-red-600/80 text-white font-bold">KILL</span>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div class="grid">
-                <div class="card">
-                    <div class="card-icon">🧠</div>
-                    <h3>Darwin Mach Kernel Telemetry</h3>
-                    <p>Direct low-level calls to <code>host_statistics64</code> and <code>sysctl vm.swapusage</code>. Sub-millisecond accuracy without heating up your CPU.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🤖</div>
-                    <h3>AI VRAM Model Ejector</h3>
-                    <p>Running Ollama or local LLMs? Eject idle models instantly with one click via local API to reclaim up to 16 GB of unified memory instantly.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🛰️</div>
-                    <h3>Remote VPS Fleet Heartbeat</h3>
-                    <p>Live Linux telemetry delivered straight to your macOS menu bar. Check your server's RAM, CPU load, and disk health without opening SSH.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🚨</div>
-                    <h3>Instant Process Term / Kill</h3>
-                    <p>Pinpoint memory hogs immediately. Send graceful SIGTERM or forced SIGKILL directly from your menu bar dropdown.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">⚡</div>
-                    <h3>768 KB Native Binary</h3>
-                    <p>No Python runtime, no 200 MB Electron baggage. Written purely in native Swift 6 and SwiftUI. Starts in under 50 milliseconds.</p>
-                </div>
-                <div class="card">
-                    <div class="card-icon">🚀</div>
-                    <h3>Launch at Login</h3>
-                    <p>Integrated with modern macOS <code>SMAppService</code>. Runs quietly in the background without cluttering your Dock.</p>
-                </div>
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-2 gap-2 mt-3 font-mono text-[11px] font-bold">
+          <div class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800/80 text-slate-200 border border-slate-700/60 cursor-pointer hover:bg-slate-700">
+            🗑️ Flush Cache
+          </div>
+          <div class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-cyan-950/40 text-cyan-300 border border-cyan-500/30 cursor-pointer hover:bg-cyan-900/40">
+            🔥 Eject AI VRAM
+          </div>
+        </div>
+
+        <!-- Remote VPS Node Card -->
+        <div class="mt-3 p-3 rounded-xl bg-slate-900/70 border border-slate-800/60 font-mono">
+          <div class="flex justify-between items-center text-[10px] font-bold">
+            <div class="flex items-center gap-1.5 text-white">
+              <span class="w-2 h-2 rounded-full bg-green-400"></span>
+              <span>PRODUCTION HOSTINGER VPS</span>
             </div>
-        </section>
-
-        <!-- Pricing -->
-        <section class="pricing" id="pricing">
-            <div class="pricing-card">
-                <div class="badge">Lifetime Ownership</div>
-                <h3>CoreDeck Pro</h3>
-                <p style="color: var(--text-muted); font-size: 0.9rem;">No subscriptions. Buy once, use forever.</p>
-                <div class="price">$14.99 <span>one-time</span></div>
-
-                <ul class="feature-list">
-                    <li>Native Apple Silicon binary (M1/M2/M3/M4)</li>
-                    <li>Ollama & AI VRAM Model Purger</li>
-                    <li>Remote VPS Node Telemetry Integration</li>
-                    <li>Instant Process Killer (TERM / KILL)</li>
-                    <li>Launch at Login support</li>
-                    <li>All future minor & major updates included</li>
-                </ul>
-
-                <a href="CoreDeck-Installer.dmg" class="btn-primary btn-large" style="display: block;" download>
-                    Download Free Evaluation DMG
-                </a>
+            <span class="text-[8px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+              SSH (15ms)
+            </span>
+          </div>
+          <div class="grid grid-cols-4 gap-2 mt-2 pt-2 border-t border-slate-800/60 text-center">
+            <div>
+              <div class="text-[8px] text-slate-400">RAM</div>
+              <div class="text-[10px] font-bold text-slate-200">1240/3940M</div>
             </div>
-        </section>
-    </main>
+            <div>
+              <div class="text-[8px] text-slate-400">LOAD</div>
+              <div class="text-[10px] font-bold text-slate-200">0.24</div>
+            </div>
+            <div>
+              <div class="text-[8px] text-slate-400">DISK</div>
+              <div class="text-[10px] font-bold text-slate-200">18/78G</div>
+            </div>
+            <div>
+              <div class="text-[8px] text-slate-400">UPTIME</div>
+              <div class="text-[10px] font-bold text-slate-200">42d 11h</div>
+            </div>
+          </div>
+        </div>
 
-    <footer>
-        <p>© 2026 CoreDeck by Ariel Kapitkowski. All rights reserved. Crafted with Beskar precision.</p>
-    </footer>
+        <!-- HUD Footer -->
+        <div class="flex items-center justify-between mt-3 pt-2 text-[9px] font-mono text-slate-500">
+          <span class="text-yellow-400 font-bold">⭐️ Pro License (Active)</span>
+          <div class="flex items-center gap-2">
+            <span class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">🇬🇧 EN / 🇵🇱 PL</span>
+            <span>v2.0 Native Swift</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature Highlights -->
+    <div id="features" class="py-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-black text-white">Built for power users who demand native performance.</h2>
+        <p class="text-sm text-slate-400 mt-2">Zero background battery drain. Zero web views. Pure macOS architecture.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-cyan-500/40 transition-all">
+          <div class="text-2xl mb-3">🔥</div>
+          <h3 class="text-base font-bold text-white">AI VRAM Ejector</h3>
+          <p class="text-sm text-slate-400 mt-2 leading-relaxed">
+            Running local LLMs with Ollama, LM Studio, or MLX? When done, CoreDeck issues graceful model unloads and kills hanging Metal runners, releasing up to 32 GB Unified Memory instantly.
+          </p>
+        </div>
+
+        <div id="vps" class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-orange-500/40 transition-all">
+          <div class="text-2xl mb-3">🛰️</div>
+          <h3 class="text-base font-bold text-white">Dual-Mode Fleet VPS HUD</h3>
+          <p class="text-sm text-slate-400 mt-2 leading-relaxed">
+            Zero-daemon setup. Connect directly to your Hostinger or Linux VPS via raw SSH using your panel credentials (15ms execution), or deploy the 1-liner HTTP micro-agent.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-yellow-500/40 transition-all">
+          <div class="text-2xl mb-3">⚡</div>
+          <h3 class="text-base font-bold text-white">Instant Process Terminator</h3>
+          <p class="text-sm text-slate-400 mt-2 leading-relaxed">
+            Activity Monitor frozen during a beachball? CoreDeck shows your top memory consumers in real-time and terminates them with <code class="text-yellow-300 font-mono text-xs">TERM</code> or <code class="text-red-400 font-mono text-xs">KILL</code> in 5ms.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Section with Stripe Checkout -->
+    <div id="pricing" class="py-16">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-black text-white">Simple, transparent pricing.</h2>
+        <p class="text-sm text-slate-400 mt-2">Zero subscriptions. Buy once, own forever across all your Macs.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Free Plan -->
+        <div class="p-8 rounded-2xl bg-slate-900/50 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">Free Evaluation</span>
+            <div className="mt-4 flex items-baseline gap-2">
+              <span class="text-4xl font-black text-white">$0</span>
+              <span class="text-xs text-slate-500 font-mono">forever</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-3">Essential system HUD for daily memory monitoring.</p>
+
+            <ul class="mt-6 space-y-3 text-xs text-slate-300 font-mono">
+              <li class="flex items-center gap-2">✓ Unified Memory & Swap HUD</li>
+              <li class="flex items-center gap-2">✓ APFS Disk space telemetry</li>
+              <li class="flex items-center gap-2">✓ Top 3 memory consuming processes</li>
+              <li class="flex items-center gap-2">✓ Single VPS Server monitoring</li>
+              <li class="flex items-center gap-2 text-slate-500">✕ Process termination (KILL/TERM)</li>
+              <li class="flex items-center gap-2 text-slate-500">✕ AI VRAM Ejector & Cache Flusher</li>
+            </ul>
+          </div>
+
+          <a href="CoreDeck-Installer.dmg" download class="mt-8 block text-center py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-mono font-bold text-xs border border-slate-700 transition-all">
+            Download Free DMG
+          </a>
+        </div>
+
+        <!-- Pro Lifetime Plan with Stripe -->
+        <div class="relative p-8 rounded-2xl bg-gradient-to-b from-slate-900 to-[#0e1424] border-2 border-yellow-500/50 shadow-2xl shadow-yellow-500/10 flex flex-col justify-between">
+          <div class="absolute -top-3 right-6 px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-[10px] font-mono font-black rounded-full uppercase tracking-wider shadow-lg">
+            Most Popular
+          </div>
+
+          <div>
+            <span class="text-xs font-mono font-bold text-yellow-400 uppercase tracking-wider">Pro Lifetime</span>
+            <div class="mt-4 flex items-baseline gap-2">
+              <span class="text-4xl font-black text-white">$14.99</span>
+              <span class="text-xs text-slate-400 font-mono">one-time payment (~£11.99)</span>
+            </div>
+            <p class="text-sm text-slate-400 mt-3">Full power for software engineers, AI developers, and sysadmins.</p>
+
+            <ul class="mt-6 space-y-3 text-xs text-slate-200 font-mono">
+              <li class="flex items-center gap-2 text-yellow-300">✓ Everything in Free</li>
+              <li class="flex items-center gap-2 text-yellow-300">✓ Instant Process Killer: TERM & KILL buttons</li>
+              <li class="flex items-center gap-2 text-yellow-300">✓ AI VRAM Ejector: One-click Ollama / Metal flush</li>
+              <li class="flex items-center gap-2 text-yellow-300">✓ Multi-Server VPS Fleet: Unlimited nodes (SSH & HTTP)</li>
+              <li class="flex items-center gap-2 text-yellow-300">✓ Top 5 Hogs view: Extended process diagnostics</li>
+              <li class="flex items-center gap-2 text-yellow-300">✓ Lifetime license key with instant activation</li>
+            </ul>
+          </div>
+
+          <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="mt-8 block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+            Buy Lifetime License ($14.99)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div id="faq" class="py-12 max-w-3xl mx-auto">
+      <h2 class="text-2xl font-black text-white text-center mb-8">Frequently Asked Questions</h2>
+      <div class="space-y-4 font-mono text-xs">
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div class="font-bold text-white text-sm">Which macOS versions are supported?</div>
+          <p class="text-slate-400 mt-2 leading-relaxed">
+            CoreDeck is built for macOS 13.0 (Ventura) and newer, with native ARM64 optimization for all Apple Silicon chips (M1, M2, M3, M4, Pro, Max, Ultra).
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div class="font-bold text-white text-sm">How does the VPS monitoring work without open ports?</div>
+          <p class="text-slate-400 mt-2 leading-relaxed">
+            In Mode 1 (SSH Direct), CoreDeck uses your Mac's native OpenSSH client to connect with your Hostinger or Linux panel credentials, executing a lightweight 15ms command that parses /proc. In Mode 2 (HTTP Agent), a simple 1-liner installer script sets up a systemd micro-daemon.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+          <div class="font-bold text-white text-sm">Is this a subscription?</div>
+          <p class="text-slate-400 mt-2 leading-relaxed">
+            No. CoreDeck is a single lifetime purchase. You buy once for $14.99 and receive a license key usable across all your personal Macs.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 border-t border-slate-800/80 py-8 text-center text-xs font-mono text-slate-500">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <img src="app-icon.png" class="w-5 h-5 rounded-md object-contain" alt="CoreDeck">
+        <span class="font-bold text-slate-400">CoreDeck</span>
+        <span>• Developed by Armako Limited</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="CoreDeck-Installer.dmg" download class="hover:text-cyan-400 transition-colors">Download DMG</a>
+        <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="hover:text-cyan-400 transition-colors">Buy Pro ($14.99)</a>
+        <a href="https://armako.co.uk" class="hover:text-cyan-400 transition-colors">Armako.co.uk</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Stripe Checkout Helper -->
+  <script>
+    function initiateStripeCheckout() {
+      window.location.href = 'https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01';
+    }
+  </script>
 </body>
 </html>
