@@ -41,6 +41,27 @@
 
 ---
 
+## 📥 Download & Installation
+
+### Option 1: Direct DMG (Recommended)
+Download the signed installer DMG directly from the official website:
+**[https://armako.co.uk/coredeck/](https://armako.co.uk/coredeck/)**
+
+Direct download link:
+* **[CoreDeck-Installer.dmg](https://armako.co.uk/coredeck/CoreDeck-Installer.dmg)** (2.9 MB, Apple Silicon Native)
+* SHA256: `46805869904fc60a3c633d152b3ec3bc6d509dbe7a680d685697268970728f0d`
+
+### Option 2: Homebrew
+```bash
+brew install --cask coredeck
+```
+Or via custom tap:
+```bash
+brew install --cask Arielkap/tap/coredeck
+```
+
+---
+
 ## 🛠️ Build & Package
 
 To re-compile and package into a standalone `.app` bundle:
@@ -48,4 +69,4 @@ To re-compile and package into a standalone `.app` bundle:
 ./package.sh
 ```
 
-This compiles a release binary with full optimizations and produces `CoreDeck.app` (ad-hoc codesigned and ready to run).
+This compiles a release binary with full optimizations and produces `CoreDeck.app` and `CoreDeck-Installer.dmg`.
