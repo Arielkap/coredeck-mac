@@ -1,0 +1,57 @@
+
+🧵 VIRAL X (TWITTER) LAUNCH THREAD (Copy-paste or post via API)
+================================================================
+
+[Tweet 1 - The Hook (Attach 10s Screen Studio Video)]
+Most Mac system monitors are 150MB of bloated Electron crap that eat more RAM than the apps they monitor.
+
+So I wrote a 768 KB native Swift 6 HUD for Apple Silicon power users that actually does something useful:
+
+Introducing CoreDeck. ⚡️🍎
+
+🧵👇
+
+---
+
+[Tweet 2 - The AI / VRAM Problem]
+If you run local LLMs (Ollama, LM Studio) or Docker on an M1/M2/M3/M4 Mac, you know the pain:
+
+A model stays loaded in unified VRAM for hours in the background. Swap starts bleeding. Your Mac stutters.
+
+With CoreDeck, one click sends `keep_alive: 0` to Ollama and ejects gigabytes of VRAM instantly. 🤖
+
+---
+
+[Tweet 3 - The Remote Node Twist]
+Every other menu bar app only monitors your local Mac.
+
+CoreDeck also connects to your remote Linux VPS fleet (via lightweight HTTPS telemetry).
+
+Check remote RAM, CPU load, and NVMe health right from macOS without opening a terminal window. 🛰️
+
+---
+
+[Tweet 4 - Pure Beskar Architecture]
+• 768 KB standalone `.app` bundle
+• 0.0% idle CPU usage
+• Direct Darwin Mach kernel syscalls (`host_statistics64`)
+• Instant SIGTERM / SIGKILL for memory hogs
+• Native SwiftUI `.window` popover
+
+Zero tracking. Zero bloatware.
+
+---
+
+[Tweet 5 - The Drop]
+Download the free evaluation build or get the Lifetime Pro license ($14.99):
+🔗 https://armako.co.uk/coredeck/
+
+Open source on GitHub:
+⭐ https://github.com/Arielkap/coredeck-mac
+
+Dropping 3 free lifetime VIP keys for the community:
+1. `CORE-VIP-S30M-EEQH-NEKE`
+2. `CORE-VIP-ECB4-JG4R-VVEE`
+3. `CORE-VIP-7SNH-XB6N-R9PN`
+
+RT and leave feedback! 🚀
