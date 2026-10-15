@@ -1,6 +1,6 @@
 cask "coredeck" do
   version "2.0.0"
-  sha256 "46805869904fc60a3c633d152b3ec3bc6d509dbe7a680d685697268970728f0d"
+  sha256 "9819affbe25d7bff7e0bacbb1e6aa50be5293c3b31d0fa8a7b5f71741f6b1956"
 
   url "https://armako.co.uk/coredeck/CoreDeck-Installer.dmg"
   name "CoreDeck"
