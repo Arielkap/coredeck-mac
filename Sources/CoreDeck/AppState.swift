@@ -44,6 +44,7 @@ public final class AppState: ObservableObject {
     
     private var localTimer: AnyCancellable?
     private var vpsTimer: AnyCancellable?
+    private var coffeeCancellable: AnyCancellable?
     
     public init() {
         self.stats = SystemTelemetry.shared.fetchLocalStats()
@@ -75,6 +76,13 @@ public final class AppState: ObservableObject {
             .autoconnect()
             .sink { [weak self] _ in
                 self?.refreshVps()
+            }
+            
+        // Coffee Mode state listener
+        self.coffeeCancellable = CoffeeManager.shared.$isActive
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
             }
     }
     
@@ -110,6 +118,7 @@ public final class AppState: ObservableObject {
     }
     
     public var menuBarText: String {
+        let coffeeEmoji = CoffeeManager.shared.isActive ? "☕️ " : ""
         let (icon, _, _) = reactorStatus
         let iconEmoji = icon == "flame.fill" ? "🔥" : (icon == "bolt.fill" ? "⚡" : "🟢")
         
@@ -123,9 +132,9 @@ public final class AppState: ObservableObject {
         }
         
         if isCompact {
-            return "\(iconEmoji) \(Int(stats.ramPercent))% | 🔄 \(String(format: "%.1fG", stats.usedSwapGB))\(serverPart)"
+            return "\(coffeeEmoji)\(iconEmoji) \(Int(stats.ramPercent))% | 🔄 \(String(format: "%.1fG", stats.usedSwapGB))\(serverPart)"
         } else {
-            return "\(iconEmoji) \(String(format: "%.1f", stats.usedRamGB))/\(Int(stats.totalRamGB))G | 💾 \(Int(stats.freeDiskGB))G | 🔄 \(String(format: "%.1fG", stats.usedSwapGB))\(serverPart)"
+            return "\(coffeeEmoji)\(iconEmoji) \(String(format: "%.1f", stats.usedRamGB))/\(Int(stats.totalRamGB))G | 💾 \(Int(stats.freeDiskGB))G | 🔄 \(String(format: "%.1fG", stats.usedSwapGB))\(serverPart)"
         }
     }
     
@@ -364,6 +373,23 @@ public final class AppState: ObservableObject {
             self.refreshLocal()
             
             try? await Task.sleep(nanoseconds: 3_500_000_000)
+            self.statusMessage = nil
+        }
+    }
+    
+    public func toggleCoffee(duration: CoffeeDuration = .indefinite) {
+        guard LicenseManager.shared.isPro else {
+            LicenseManager.shared.showActivationSheet = true
+            return
+        }
+        CoffeeManager.shared.toggle(duration: duration)
+        if CoffeeManager.shared.isActive {
+            self.statusMessage = language == .en ? "Coffee Mode Active (Display Awake)" : "Tryb Kawki Aktywny (Ekran nie zaśnie)"
+        } else {
+            self.statusMessage = language == .en ? "Coffee Mode Disabled" : "Tryb Kawki Wyłączony"
+        }
+        Task {
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
             self.statusMessage = nil
         }
     }

@@ -43,7 +43,7 @@ cat << 'EOF' > "$CONTENTS_DIR/Info.plist"
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.0.0</string>
+    <string>2.1.0</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>LSMinimumSystemVersion</key>
@@ -77,6 +77,7 @@ echo "✅ Sukces! Aplikacja $APP_NAME jest gotowa w $APP_DIR"
 echo "💿 Tworzenie instalatora .DMG..."
 DMG_NAME="CoreDeck-Installer.dmg"
 DMG_ROOT="/tmp/coredeck_dmg_staging"
+hdiutil detach /Volumes/CoreDeck -force 2>/dev/null || true
 rm -rf "$DMG_ROOT" "$DIR/$DMG_NAME"
 mkdir -p "$DMG_ROOT"
 
