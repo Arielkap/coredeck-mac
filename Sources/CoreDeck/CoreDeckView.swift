@@ -3,6 +3,7 @@ import SwiftUI
 public struct CoreDeckView: View {
     @ObservedObject var state: AppState
     @ObservedObject var license = LicenseManager.shared
+    @ObservedObject var coffee = CoffeeManager.shared
     
     public init(state: AppState) {
         self.state = state
@@ -410,6 +411,90 @@ public struct CoreDeckView: View {
                 }
                 .buttonStyle(.plain)
             }
+            
+            // MARK: Coffee Mode (Anti-Sleep)
+            HStack(spacing: 8) {
+                Button {
+                    state.toggleCoffee()
+                } label: {
+                    HStack(spacing: 8) {
+                        ZStack {
+                            Circle()
+                                .fill(coffee.isActive ? Color.orange.opacity(0.2) : Color.secondary.opacity(0.1))
+                                .frame(width: 24, height: 24)
+                            Image(systemName: coffee.isActive ? "cup.and.saucer.fill" : (license.isPro ? "cup.and.saucer" : "lock.fill"))
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(coffee.isActive ? .orange : (license.isPro ? .primary : .secondary))
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 1) {
+                            HStack(spacing: 5) {
+                                Text(license.isPro ? state.t(.coffeeTitle) : state.t(.coffeeTitlePro))
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(coffee.isActive ? .orange : .primary)
+                                
+                                if coffee.isActive {
+                                    Text(coffee.currentDuration.shortBadge)
+                                        .font(.system(size: 8, weight: .heavy, design: .monospaced))
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(Color.orange.opacity(0.25))
+                                        .foregroundColor(.orange)
+                                        .clipShape(Capsule())
+                                }
+                            }
+                            
+                            Text(coffee.statusSubtitle(lang: state.language))
+                                .font(.system(size: 9))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                
+                if license.isPro {
+                    Menu {
+                        ForEach(CoffeeDuration.allCases) { dur in
+                            Button {
+                                coffee.start(duration: dur)
+                            } label: {
+                                HStack {
+                                    Text(dur.title(lang: state.language))
+                                    if coffee.isActive && coffee.currentDuration == dur {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                        if coffee.isActive {
+                            Divider()
+                            Button(role: .destructive) {
+                                coffee.stop()
+                            } label: {
+                                Label(state.language == .en ? "Turn Off" : "Wyłącz", systemImage: "xmark.circle")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 14))
+                            .foregroundColor(coffee.isActive ? .orange : .secondary)
+                            .padding(4)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                }
+            }
+            .padding(8)
+            .background(coffee.isActive ? Color.orange.opacity(0.12) : Color.secondary.opacity(0.05))
+            .cornerRadius(8)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(coffee.isActive ? Color.orange.opacity(0.4) : Color.secondary.opacity(0.12), lineWidth: 1)
+            )
             
             // MARK: Remote Server / VPS Telemetry Card & Configuration Table
             VStack(alignment: .leading, spacing: 8) {
@@ -1023,7 +1108,7 @@ public struct CoreDeckView: View {
                     }
                     .buttonStyle(.plain)
                     
-                    Text("v2.0 Native Swift")
+                    Text("v2.1 Native Swift")
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundColor(.secondary.opacity(0.5))
                 }

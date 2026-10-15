@@ -71,6 +71,11 @@ public enum L10nKey: Sendable {
     case flushCachePro
     case ejectAi
     case ejectAiPro
+    case coffeeTitle
+    case coffeeTitlePro
+    case coffeeActive
+    case coffeeNormal
+    case coffeeDurationPrompt
     
     // VPS & Fleet
     case vpsTelemetryTitle
@@ -166,6 +171,11 @@ public struct L10n {
         case .flushCachePro: return "Flush Cache [PRO]"
         case .ejectAi: return "Purge VRAM & Cache"
         case .ejectAiPro: return "Purge VRAM [PRO]"
+        case .coffeeTitle: return "Anti-Sleep (Coffee Mode)"
+        case .coffeeTitlePro: return "Anti-Sleep [PRO]"
+        case .coffeeActive: return "Active (Prevent Sleep)"
+        case .coffeeNormal: return "Normal Display Sleep"
+        case .coffeeDurationPrompt: return "Select Duration"
             
         case .vpsTelemetryTitle: return "REMOTE VPS TELEMETRY"
         case .closeBtn: return "Close"
@@ -250,6 +260,11 @@ public struct L10n {
         case .flushCachePro: return "Wyczyść Cache [PRO]"
         case .ejectAi: return "Zwolnij VRAM & Cache"
         case .ejectAiPro: return "Zwolnij VRAM [PRO]"
+        case .coffeeTitle: return "Tryb Kawki (Anty-Uśpienie)"
+        case .coffeeTitlePro: return "Tryb Kawki [PRO]"
+        case .coffeeActive: return "Kawka Aktywna (Czuwanie)"
+        case .coffeeNormal: return "Normalne Uśpienie Ekranu"
+        case .coffeeDurationPrompt: return "Wybierz czas trwania"
             
         case .vpsTelemetryTitle: return "TELEMETRIA SERWERA VPS"
         case .closeBtn: return "Zamknij"
