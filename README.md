@@ -49,7 +49,7 @@ Download the signed installer DMG directly from the official website:
 
 Direct download link:
 * **[CoreDeck-Installer.dmg](https://armako.co.uk/coredeck/CoreDeck-Installer.dmg)** (2.9 MB, Apple Silicon Native)
-* SHA256: `46805869904fc60a3c633d152b3ec3bc6d509dbe7a680d685697268970728f0d`
+* SHA256: `f64fa30258fe83447c9bb49d7f816418de1d8a528de8d7f0399049daca8f4e3c`
 
 ### Option 2: Homebrew
 ```bash

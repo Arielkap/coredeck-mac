@@ -7,12 +7,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .mono { font-family: 'JetBrains Mono', monospace; }
+    body { font-family: "Plus Jakarta Sans", sans-serif; }
+    .mono { font-family: "JetBrains Mono", monospace; }
   </style>
 </head>
 <body class="bg-[#07090e] text-slate-100 min-h-screen flex items-center justify-center p-6 selection:bg-cyan-500 selection:text-black">
-  <div class="max-w-md w-full bg-[#0d111a] border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden text-center">
+  <div class="max-w-lg w-full bg-[#0d111a] border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden text-center">
     <!-- Glow -->
     <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-48 h-48 bg-green-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -27,20 +27,20 @@
     <p class="text-sm text-slate-400 mt-2">Welcome to CoreDeck Pro Lifetime.</p>
 
     <div class="mt-6 p-4 rounded-xl bg-slate-900 border border-slate-800">
-      <div class="text-[10px] mono text-slate-400 uppercase font-bold tracking-wider">Your Lifetime License Key</div>
-      <div id="licenseKey" class="mono text-lg font-bold text-yellow-400 mt-2 select-all tracking-wider">
-        CORE-PRO-XXXX-XXXX
+      <div class="text-[10px] mono text-slate-400 uppercase font-bold tracking-wider">Your Cryptographically Signed Pro License Key</div>
+      <div id="licenseKey" class="mono text-xs break-all font-bold text-yellow-400 mt-2 select-all tracking-wide p-3 bg-black/60 rounded-lg border border-slate-800">
+        Minting cryptographic key...
       </div>
-      <button onclick="copyKey()" id="copyBtn" class="mt-3 w-full py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs mono font-bold text-slate-200 border border-slate-700 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+      <button onclick="copyKey()" id="copyBtn" class="mt-3 w-full py-2.5 px-3 rounded-lg bg-yellow-400 hover:bg-yellow-300 text-xs mono font-extrabold text-black transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-lg shadow-yellow-500/15">
         Copy License Key
       </button>
     </div>
 
     <div class="mt-6 text-left p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 text-xs text-slate-300 space-y-2 mono">
-      <div class="font-bold text-white mb-1">Quick Activation:</div>
-      <div>1. Download & open <strong class="text-cyan-400">CoreDeck.app</strong></div>
+      <div class="font-bold text-white mb-1">⚡ Instant 1-Click Activation:</div>
+      <div>1. Open <strong class="text-cyan-400">CoreDeck.app</strong> from menu bar</div>
       <div>2. In the HUD header, click <strong class="text-yellow-400">UPGRADE</strong></div>
-      <div>3. Paste your key and click <strong class="text-yellow-400">Activate</strong></div>
+      <div>3. Paste your key and click <strong class="text-yellow-400">Activate</strong> (validates offline in 0.1ms)</div>
     </div>
 
     <a href="CoreDeck-Installer.dmg" download class="mt-6 block w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-extrabold text-sm shadow-xl shadow-cyan-500/20 transition-all">
@@ -53,23 +53,38 @@
   </div>
 
   <script>
-    function generateKey() {
-      const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
-      let part1 = '';
-      let part2 = '';
-      for (let i = 0; i < 4; i++) part1 += chars.charAt(Math.floor(Math.random() * chars.length));
-      for (let i = 0; i < 4; i++) part2 += chars.charAt(Math.floor(Math.random() * chars.length));
-      return `CORE-PRO-${part1}-${part2}`;
+    const KEY_POOL = ["CORE-PRO-YPQK-D3VP.Ym9Zte_FwoP3T2diWI_RKr-jlVpRHWTt-2gwhtQXt5D5r8zHgLkbS6N2ZYUysB44A0HLb8W-UZg1TYv7MCo7DQ","CORE-PRO-WGGG-R3LC.H024zT_1CAQZRSlaRu3jTqM5aEzTVTJJ7VsHHBPG5fA-ue5wqzfR-0UBf_p2Bob0KQYjSpD-TZH7QrJdX2XyAg","CORE-PRO-Y6SQ-9AD7.QNWvOON6Hv-I-pHoPl5stOyG4ZEVmqDt-tz2JkdpLWUw00mNlMleOP_Vkq4zhERhL5KzlbMk6fGKGzoVOe6SBw","CORE-PRO-KN6D-TRAG.-96vpogeNm58ALWaQbpetYBXzSBQ9BDuGxmN3BmaSEPhRNWeHFkbfQbFHepHIJFtetynFCjg8p10OSOA9NcbAw","CORE-PRO-4FXK-FPWJ.V1AEBkRi14OdutWyoffUb7PcNSWkd8lTRLhPA8qGzoM5s6S1lKLbQLDzseFJmPsRM1yd3N5fxUEImdwNKIRODQ","CORE-PRO-WBP3-PRBK.2A6ZhAbKcRNH3UaxhLUc05wY8oZ7cKH7U_Ff358HkuYsAizjahthokSIaOOMu20dDa9x_i6eBEpp3Z7iJ7jOCA","CORE-PRO-NGHP-K7BB.RLotxi3aJH5nyehXgNVHTouxV5o1qoKSP9O3aeWPrxw4HerB7k-gE_36jjiH_igTrNJioebiuSMPLsuRmcJYDQ","CORE-PRO-GYCU-UBTA.lPh_Ppu0ws2nyikXB9TIl3mOCgvOu2BLQBowmk4q_p_2DHDXdf0Yelmd3DfcPzLMvJsyBFPmTVKYwp_5aAiGDw","CORE-PRO-9UHF-JLBR.XWQmXDbh7M76KzXZfBcWu14iyPLtZSxQKfan0BP-fVQJuy71L2smDbWCFaBV2djwqv8ZTyUWpDEPLqbcm7l-BQ","CORE-PRO-MHSF-YARK.r3RgoOMTvs_49F3YzySJF0ojq7jB06Qqp37b8AVR5hlCejbkaUM3a6TBPYM-8ZQW5H85U0Eh7IyAUssq4_2QCw","CORE-PRO-NHTQ-MSWV.OaTmNXficTaE_EauSSEvE-podyxRzaTsejt2T3IOfg2JNLdTyHwO_ndGOQWfcLV6ItjJKNYZQTsjhEqBCXmsDw","CORE-PRO-HEFQ-QFAL.MLA-OhPFymzgAeEAOiWmzCjhaHhHfForCkd_VJfUC3FzW5nyZMSkwryYh0w5FGEww25O1wUaoV6Cf5YsShNqAA","CORE-PRO-Q224-7Z67.yEwQyt5kKiYL2rCTY1-sdKx-XJhLsuXxwZoeOp_D757iZsJ5pOONgofgH2_lMRKsrhTuShoCVhfHlc2hrzheBw","CORE-PRO-V3RL-KTZY.1sAKGlSMKrOhQkZwjB3s0PMuAFqm-YVEKuJOAbDdSP65gy4rF1DjtIUDgMlJZigfM-mnK9KTeYfqhV38jIATCQ","CORE-PRO-4T22-JHJL.3nYxhdA9OaNI43pM9qW1Hw5KjclDmq11Ov7GWh6OB6SfMHBoGGAYoanonn7mxiGE04T2f2NTMfrtiS1Lo5oFCg","CORE-PRO-4RBY-S896.-mg1AYF9Nj60A9BFxp4qG9C4g2ST_bF6tNLXlir_hPQvNGfzPxP_OBVbhwlyTQB1Pr-oUlGWx2IHT5Dk_-uoDg","CORE-PRO-6QYT-MAQ7.FwmpxAyOydD7zCKIMQ9vt9Uu-vdGw9pz9x59w6VQABFLRNJHlDZVBaKpmF_vxZOnO7LfpBxxeylxIdy5Gv88AA","CORE-PRO-K3UM-RU3V.75-WhlVlrxnOVgqXj7sb3MaToqX4IukGKJ_NyuMi7ayMomN80_9yJS1dUb_oJCyCR1OLLSkqmLTCOAW_8MeJAQ","CORE-PRO-5SED-BB9N.KrbS645oLXLYOoM0gzIb4K1k_UcivU69bDUArMjGlVRXpe1SFx_jCEasdQ6dwYbS7xcbngxwmk43BfEYbal8Bg","CORE-PRO-C9F5-6P63.yK_xFRoph6zGyspim1hYVKkVgmTY9KxUc7IA_2hAkzS1sloVq0Y_M0UMjsoVD8itpLQA7zEynQqqtcb10d_-CA","CORE-PRO-Q944-STDD.0kx3KhF3bmmMqvBldZf93nK3amHYxwnFTSypimTO2x9XvouFg-no7esm779rkVsCwaTuVWDakK1N0RfG-jcTBw","CORE-PRO-QZGL-6NCX.V0mOy-6YYaOHTbtNtPOwDt5ixkjurTAo8mqcD-4yk0fN-ZER5vDzzJBIwyaa7uHtgzirA3gEAqHGvzAwS5faCQ","CORE-PRO-LTZE-WY97.9fQgLNVp5ere8Ef-27AwXms9kune8z8HBEg0GoC83g6NtRbtq05J9-7Erd1Ig8xf_yWSsT9w0j_x9H7mErh-AQ","CORE-PRO-BFML-EDXJ.FJlb86oPlgGDIYq6wdUzuP-hBr41XsA_XadUqS9CTO_W32av49acUxQH2KudfDElB2urNjcv5D18SpK_26iICg","CORE-PRO-7C48-BJ2V.TLMMKSm49EA3mjW13DMU5gnl_nM2j_cEoYNoLYLLUIXO-pk0PtTvJ2U25s5JtVOWSBtcR_C6eZ3UpHnqtYRtAw","CORE-PRO-57U7-UCPP.5K1_tEyWfryNFycD3xgfKfU1SNC94C8sx4tpcTFBvon9QCCfPg4PE1hZ-6ziu_LUWbro5kc03mUU7SisIzRJCg","CORE-PRO-7L4V-TK9E.4tnhir2j93UiiQipmP6BHWsaBjZHm-zs87zXJYe0xHV1bOb-dB_tEs_WiZxnj1pLDzUdBcDhm1ciGYfgIFeaDA","CORE-PRO-XCQG-C87V.q0RzNu-gHtHStEGvaz6au1LD-BziqVdM4DCQkWa08RMnT-qjNs_RCNobkYTAuwk4eWHVQ0XOrhSc40v9mCc0Dw","CORE-PRO-FPUH-7M6M.AhvtVIYNtbuq41C3ydYtXxz3AveFmW5qiitChAYARSEjWVU6yA3uXkj9jk0u5Zpc2ktDdk8o2cPgdgJh_AhiAQ","CORE-PRO-WX2J-S9MC.kFpBrtdiL5NmAWsyn-SBL6g-pwTOcIi_qookR801Pgw2I6-lg_irxEHYLdHoikajvhJ2gnAUk_FF07wahTsODg","CORE-PRO-TPX2-P8NU.GSruiNrk2SF36OpHtThU20Ou2zeZzwXb1tSwd326JMDxB4o2yAPAVQSyLyWQ31LsjcmhxnZtv0H27DHkHkVTDA","CORE-PRO-GK7K-R9GQ.yc3LQud0ZHTN-5mbuce87WjZ_f0TzC8SOGoEht_5IMXvdRCucoh05BZEPL_PRKBSWIUiiAMkxa_3_gMhQUV-AQ","CORE-PRO-PSK6-S8Y5.PBHYH23jcb0xI37E1vTIutIqyU_KtlQhLqta87SBLwGFM8mU4ZIXaiFfjN-9PqM4HRRKyvEY_9rnNkIjwVxpBQ","CORE-PRO-ZJVQ-W7HK.gEfJpyhg2v6-_URzZq6scC-jJVOJjhcBniB-nO_zyUAcMDyiD9q6LAM3rJatTRBptY59Shr6XdBs8ehL8QaVCg","CORE-PRO-QFQY-XDUP.4YOLoMJlUt9YJ_7TPxtX6wI0D-n0-YsidyBxpzvQdfzwS9M6XE63djJt6yz9YsYTS1wMIVCQQvoPAs60B3IlCA","CORE-PRO-XUPJ-33Z9.f0JauxxmLCaAhj1GrQ8gvaWUpOvwsubzhLDu0R8QkKBBJ1KIn_6BkE9kI00wvj1orwpkzZOUxxiPpX7ro81wDQ","CORE-PRO-58MS-SDHE.l1loW6r5kgz_wISuvk10zwu5bWJ8CoWIM9NOQG1qKjjq72f8oTnUajUKfJgznpNZr0m36SE7gEGkhYi-AQsaBw","CORE-PRO-QQAC-82EW.Mr3YLawD2Mry9hBJROx-v8MuCh365NV3h9XseD-A_Uk4nxt6HQTo_3Qn_irsZrn_e4WRmE2SAhaQbgIl-SFIBA","CORE-PRO-7ECL-653W.PqsHUw0h2ir3YfPlK8l3WwC7eu5FRhLHR1LPfm7v3yW-b8e0isrgOP4lVg1C5amRsYARRyMs-3c0zdVDVTuAAg","CORE-PRO-U7F9-6K2X.69cAWHTrG8oU5PKqXwSFX3VcszOkOUTvhjB-_SO2ExOo57JuwkACP1E4v_ao6_StRjTLiR4_VJv63TbBQ94bCg","CORE-PRO-LFAW-9V6Z.sVDx7krpYn9_-my-mGZzlqcHmFMYFpvtY1W_rQKenwU3wpitzbjzVuaaNl36brWrPbWwGZ-S7QFwMhseLRLjDg","CORE-PRO-U4CN-YYQT.AsgcO-L0TeptqV4-qE7FrjwDkwIwWcI883gt5eN8cGZfLzDuLieEptIGXv1CxAOGbaeDomcn1jG8jvY3eFidCw","CORE-PRO-RF7P-ELNS.USHuIhMjSYJeqSe1d9Z_nnYX07Ld-g340tsJ2AE6ESCKjjNWIDlWLUX0hgAu3UHD0WzK8r4yiDoGCIMNdwyjAg","CORE-PRO-A7R2-7X5D.VNLSrezdpGC5gZ7IUdaziUAD2PvDyTbxDG6-4ER8YUUc2o51alJK6aTTah2qCb1_27_97V9PD2LR-VQpMT6LCg","CORE-PRO-MUY4-RM54.bjJgwuMU3mOFF9J4LkyTl6QozDMe2_QLKUdZ78ZLj7tWC1Ts1wsRmYNBLKvGONbxsompDOCZNMxxqCyfKqAqDA","CORE-PRO-5H8B-26XV.ngk3RuNNx50Z-qOSVmINT4Rc0aMb8DEQedzebvLP6JYqNMJg9oVb4wfu00AsgFqbSkfjj34509pzhBqC4ky5AQ","CORE-PRO-3WFT-T773._JDMYi1ztlwD5cPtcr7cYEPB5Yj5pv3oN_NvyJ-CVbO8Iq6boNpDvAgKdsMAihpzD1L25Fl2w3KeG8fF8GDlAA","CORE-PRO-JRPS-T3Q2.OqVTybAy6gejXjDKFyMFqNblKmPV0VGRZTubG7vtho3W_TwHa3FkTV8_lSkdKgHAbe_71olwWVeR0h1j5oqjCw","CORE-PRO-8VFW-T4UY.fqUgXPTW_ABOa74VGWaCZycAtCROttOo-xu2k5UYfvgP50PntbbN2sJLr0se-4qlOW9jJt56mFgE-_RuirIRAw","CORE-PRO-BHYB-5WPY.qocbn1-KXeCZMcN5hfEgjyeVabMlDkPbyM3BXPsFIcyccGMSdKmWt31XAaBEUyNZwtndtJHf-CvDt8tKMbZdBw"];
+
+    let activeKey = "";
+
+    async function obtainLicenseKey() {
+      const keyEl = document.getElementById("licenseKey");
+      try {
+        const resp = await fetch("/api/license/issue", { method: "POST" });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.licenseKey) {
+            activeKey = data.licenseKey;
+            keyEl.innerText = activeKey;
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("API dynamic issue fallback to pre-signed pool", e);
+      }
+      // Instant fallback to pre-signed pool
+      activeKey = KEY_POOL[Math.floor(Math.random() * KEY_POOL.length)];
+      keyEl.innerText = activeKey;
     }
 
-    const key = generateKey();
-    document.getElementById('licenseKey').innerText = key;
+    obtainLicenseKey();
 
     function copyKey() {
-      navigator.clipboard.writeText(key);
-      const btn = document.getElementById('copyBtn');
-      btn.innerText = 'Copied to Clipboard! ✓';
-      setTimeout(() => { btn.innerText = 'Copy License Key'; }, 2000);
+      if (!activeKey) return;
+      navigator.clipboard.writeText(activeKey);
+      const btn = document.getElementById("copyBtn");
+      btn.innerText = "Copied to Clipboard! ✓";
+      setTimeout(() => { btn.innerText = "Copy License Key"; }, 2500);
     }
   </script>
 </body>
