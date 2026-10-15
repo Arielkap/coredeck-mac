@@ -32,14 +32,7 @@ public final class LicenseManager: ObservableObject {
         self.isActivating = true
         self.activationError = nil
         
-        // 1. Offline fast-path check (for promotional & developer master keys)
-        if cleanKey.hasPrefix("CORE-DEV-") || cleanKey.hasPrefix("CORE-VIP-") || cleanKey == "MANDO-BESKAR-2026" {
-            self.markProUnlocked(key: cleanKey)
-            self.isActivating = false
-            return true
-        }
-        
-        // 2. Online verification with licensing backend
+        // 1. Online verification with licensing backend
         guard let url = URL(string: verifyEndpoint) else {
             self.activationError = isPl ? "Błąd konfiguracji sieci" : "Network configuration error"
             self.isActivating = false
