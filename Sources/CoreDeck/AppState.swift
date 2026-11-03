@@ -385,6 +385,8 @@ public final class AppState: ObservableObject {
         CoffeeManager.shared.toggle(duration: duration)
         if CoffeeManager.shared.isActive {
             self.statusMessage = language == .en ? "Coffee Mode Active (Display Awake)" : "Tryb Kawki Aktywny (Ekran nie zaśnie)"
+        } else if let guardMsg = CoffeeManager.shared.guardAlertMessage {
+            self.statusMessage = guardMsg
         } else {
             self.statusMessage = language == .en ? "Coffee Mode Disabled" : "Tryb Kawki Wyłączony"
         }
