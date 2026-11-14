@@ -40,6 +40,13 @@
     <div class="absolute -bottom-[10%] -left-[10%] w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-orange-600/8 rounded-full blur-[100px] sm:blur-[150px]"></div>
   </div>
 
+  <!-- Seasonal Promotion Banner (Black Friday until 06/12/2026 -> Christmas until 31/12/2026) -->
+  <div id="promoBanner" class="relative z-30 bg-gradient-to-r from-amber-500 via-yellow-400 to-orange-500 text-black text-[11px] sm:text-xs font-mono font-extrabold py-2 px-4 text-center shadow-lg">
+    <a href="#pricing" id="promoBannerText" class="hover:underline">
+      🔥 BLACK FRIDAY PROMOTION: CoreDeck Pro Lifetime is $9.99 (Save 33% off $14.99) — Ends Dec 6, 2026
+    </a>
+  </div>
+
   <!-- Navigation -->
   <header class="relative z-20 border-b border-slate-800/80 backdrop-blur-md bg-deckDark/80 sticky top-0">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-2">
@@ -47,14 +54,14 @@
         <img src="app-icon.png" alt="CoreDeck App Icon" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-lg shadow-cyan-500/20 object-contain">
         <div class="flex items-center gap-1.5 sm:gap-2">
           <span class="font-mono font-black tracking-wider text-sm sm:text-base">COREDECK</span>
-          <span class="text-[9px] sm:text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">v2.0</span>
+          <span class="text-[9px] sm:text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">v2.1</span>
         </div>
       </div>
 
       <nav class="hidden md:flex items-center gap-8 text-sm text-slate-400 font-medium">
         <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
         <a href="#vps" class="hover:text-cyan-400 transition-colors">VPS Fleet</a>
-        <a href="#vram" class="hover:text-cyan-400 transition-colors">VRAM & Cache</a>
+        <a href="#vram" class="hover:text-cyan-400 transition-colors">VRAM &amp; Cache</a>
         <a href="#pricing" class="hover:text-cyan-400 transition-colors">Pricing</a>
         <a href="#faq" class="hover:text-cyan-400 transition-colors">FAQ</a>
       </nav>
@@ -64,8 +71,8 @@
           <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
           Download DMG
         </a>
-        <a href="#pricing" class="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black shadow-lg shadow-yellow-500/15 transition-all">
-          ★ Get Pro ($14.99)
+        <a id="headerProBtn" href="#pricing" class="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono font-bold px-3 sm:px-4 py-2 rounded-lg bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black shadow-lg shadow-yellow-500/15 transition-all">
+          ★ Get Pro ($9.99)
         </a>
       </div>
     </div>
@@ -101,8 +108,8 @@
           Download Free DMG (2.9 MB)
         </a>
 
-        <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-500/15 transition-all transform hover:-translate-y-0.5">
-          ★ Buy Pro Lifetime ($14.99)
+        <a id="heroProBtn" href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-500/15 transition-all transform hover:-translate-y-0.5">
+          🔥 Black Friday: $9.99 Lifetime <span class="line-through opacity-60 font-semibold">$14.99</span>
         </a>
       </div>
 
@@ -322,15 +329,16 @@
 
         <!-- Pro Lifetime Plan with Stripe -->
         <div class="relative p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-slate-900 to-[#0e1424] border-2 border-yellow-500/50 shadow-2xl shadow-yellow-500/10 flex flex-col justify-between">
-          <div class="absolute -top-3 right-6 px-3 py-1 bg-gradient-to-r from-yellow-400 to-amber-500 text-black text-[10px] font-mono font-black rounded-full uppercase tracking-wider shadow-lg">
-            Most Popular
+          <div id="promoRibbon" class="absolute -top-3 right-6 px-3 py-1 bg-gradient-to-r from-orange-500 via-yellow-400 to-amber-500 text-black text-[10px] font-mono font-black rounded-full uppercase tracking-wider shadow-lg">
+            Black Friday &bull; 33% Off
           </div>
 
           <div>
             <span class="text-xs font-mono font-bold text-yellow-400 uppercase tracking-wider">Pro Lifetime</span>
-            <div class="mt-4 flex items-baseline gap-2">
-              <span class="text-4xl font-black text-white">$14.99</span>
-              <span class="text-xs text-slate-400 font-mono">one-time (~£11.99)</span>
+            <div class="mt-4 flex items-baseline gap-2.5">
+              <span id="promoPriceCurrent" class="text-4xl font-black text-white">$9.99</span>
+              <span id="promoPriceOld" class="text-lg font-mono font-bold text-slate-500 line-through">$14.99</span>
+              <span id="promoPriceNote" class="text-xs text-amber-300 font-mono">Black Friday until Dec 6</span>
             </div>
             <p class="text-xs sm:text-sm text-slate-400 mt-3">Full power for software engineers, AI developers, and sysadmins.</p>
 
@@ -345,8 +353,8 @@
             </ul>
           </div>
 
-          <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="mt-8 block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer">
-            Buy Lifetime License ($14.99)
+          <a id="cardProBtn" href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="mt-8 block w-full text-center py-3.5 px-4 rounded-xl bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-black font-extrabold text-xs shadow-lg shadow-yellow-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer">
+            Claim Black Friday Pro ($9.99)
           </a>
         </div>
       </div>
@@ -372,8 +380,8 @@
 
         <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
           <div class="font-bold text-white text-sm">Is this a subscription?</div>
-          <p class="text-slate-400 mt-2 leading-relaxed">
-            No. CoreDeck is a single lifetime purchase. You buy once for $14.99 and receive a cryptographic license key usable across all your personal Macs.
+          <p id="faqPriceNote" class="text-slate-400 mt-2 leading-relaxed">
+            No. CoreDeck is a single lifetime purchase (currently $9.99 during our Black Friday promo until Dec 6, 2026, normally $14.99) and gives you a cryptographic license key usable across all your personal Macs.
           </p>
         </div>
       </div>
@@ -390,7 +398,7 @@
       </div>
       <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
         <a href="CoreDeck-Installer.dmg" download class="hover:text-cyan-400 transition-colors">Download DMG</a>
-        <a href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="hover:text-cyan-400 transition-colors">Buy Pro ($14.99)</a>
+        <a id="footerProBtn" href="https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01" class="hover:text-cyan-400 transition-colors">Buy Pro ($9.99)</a>
         <a href="privacy.html" class="hover:text-cyan-400 transition-colors">Privacy Policy</a>
         <a href="terms.html" class="hover:text-cyan-400 transition-colors">Terms of Service</a>
         <a href="mailto:hello@armako.co.uk" class="hover:text-cyan-400 transition-colors">Support</a> <!-- opsec-ignore -->
@@ -399,10 +407,68 @@
     </div>
   </footer>
 
-  <!-- Stripe Checkout Helper -->
+  <!-- Stripe Checkout & Seasonal Promo Scheduler -->
   <script>
+    const REGULAR_STRIPE_URL = 'https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01';
+    const PROMO_STRIPE_URL = 'https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01';
+
+    function applySeasonalPromotion() {
+      const now = new Date();
+      const bfEnd = new Date('2026-12-06T23:59:59Z');
+      const xmasEnd = new Date('2026-12-31T23:59:59Z');
+
+      const banner = document.getElementById('promoBanner');
+      const bannerText = document.getElementById('promoBannerText');
+      const headerBtn = document.getElementById('headerProBtn');
+      const heroBtn = document.getElementById('heroProBtn');
+      const ribbon = document.getElementById('promoRibbon');
+      const priceCur = document.getElementById('promoPriceCurrent');
+      const priceOld = document.getElementById('promoPriceOld');
+      const priceNote = document.getElementById('promoPriceNote');
+      const cardBtn = document.getElementById('cardProBtn');
+      const footerBtn = document.getElementById('footerProBtn');
+      const faqNote = document.getElementById('faqPriceNote');
+
+      if (now <= bfEnd) {
+        // Phase 1: Black Friday until 06/12/2026
+        return;
+      } else if (now <= xmasEnd) {
+        // Phase 2: Christmas Promotion 07/12/2026 - 31/12/2026
+        if (banner) {
+          banner.className = 'relative z-30 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 text-black text-[11px] sm:text-xs font-mono font-extrabold py-2 px-4 text-center shadow-lg';
+        }
+        if (bannerText) bannerText.textContent = '🎄 CHRISTMAS PROMOTION: CoreDeck Pro Lifetime is $9.99 (Save 33% off $14.99) — Limited Holiday Offer';
+        if (heroBtn) heroBtn.innerHTML = '🎄 Christmas Promo: $9.99 Lifetime <span class="line-through opacity-60 font-semibold">$14.99</span>';
+        if (ribbon) ribbon.textContent = 'Christmas Promo • 33% Off';
+        if (priceNote) priceNote.textContent = 'Christmas Offer (save $5)';
+        if (cardBtn) cardBtn.textContent = 'Claim Christmas Pro ($9.99)';
+        if (faqNote) faqNote.textContent = 'No. CoreDeck is a single lifetime purchase (currently $9.99 during our Christmas Promotion, normally $14.99) and gives you a cryptographic license key usable across all your personal Macs.';
+        [heroBtn, cardBtn, footerBtn].forEach(el => { if (el) el.href = PROMO_STRIPE_URL; });
+      } else {
+        // Standard pricing ($14.99)
+        if (banner) banner.style.display = 'none';
+        if (headerBtn) headerBtn.textContent = '★ Get Pro ($14.99)';
+        if (heroBtn) heroBtn.textContent = '★ Buy Pro Lifetime ($14.99)';
+        if (ribbon) ribbon.textContent = 'Most Popular';
+        if (priceCur) priceCur.textContent = '$14.99';
+        if (priceOld) priceOld.style.display = 'none';
+        if (priceNote) {
+          priceNote.className = 'text-xs text-slate-400 font-mono';
+          priceNote.textContent = 'one-time (~£11.99)';
+        }
+        if (cardBtn) cardBtn.textContent = 'Buy Lifetime License ($14.99)';
+        if (footerBtn) footerBtn.textContent = 'Buy Pro ($14.99)';
+        if (faqNote) faqNote.textContent = 'No. CoreDeck is a single lifetime purchase. You buy once for $14.99 and receive a cryptographic license key usable across all your personal Macs.';
+        [heroBtn, cardBtn, footerBtn].forEach(el => { if (el) el.href = REGULAR_STRIPE_URL; });
+      }
+    }
+
+    applySeasonalPromotion();
+
     function initiateStripeCheckout() {
-      window.location.href = 'https://buy.stripe.com/bJecN68U58wc8IS1Wn3AY01';
+      const now = new Date();
+      const promoActive = now <= new Date('2026-12-31T23:59:59Z');
+      window.location.href = promoActive ? PROMO_STRIPE_URL : REGULAR_STRIPE_URL;
     }
   </script>
 </body>
