@@ -4,7 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
   <title>CoreDeck — Apple Silicon & Remote VPS HUD for Mac</title>
-  <meta name="description" content="Ultra-lightweight Apple Silicon HUD. Purge VRAM & Cache with 1-click. Monitor remote Hostinger & Linux VPS nodes in 15ms. Zero Electron. 768 KB native Swift 6.">
+  <meta name="description" content="Ultra-lightweight native Swift 6 Apple Silicon HUD. Purge Ollama/MLX VRAM &amp; cache with 1-click and monitor remote Linux &amp; cloud VPS nodes over direct SSH. Zero Electron.">
+  <link rel="canonical" href="https://armako.co.uk/coredeck/">
+  <link rel="alternate" hreflang="en" href="https://armako.co.uk/coredeck/">
+  <link rel="alternate" hreflang="en-GB" href="https://armako.co.uk/coredeck/">
+  <link rel="alternate" hreflang="pl" href="https://armako.co.uk/coredeck/">
+  <link rel="alternate" hreflang="x-default" href="https://armako.co.uk/coredeck/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://armako.co.uk/coredeck/">
+  <meta property="og:title" content="CoreDeck v2.2 — Native Apple Silicon &amp; Linux VPS HUD for Mac">
+  <meta property="og:description" content="Purge AI VRAM, track Unified Memory &amp; SWAP, and monitor remote Linux VPS nodes via native SSH in 15ms. Zero Electron.">
+  <meta property="og:image" content="https://armako.co.uk/coredeck/vps-manager-v22.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="CoreDeck v2.2 — Native Apple Silicon &amp; Linux VPS HUD">
+  <meta name="twitter:description" content="Native SwiftUI menu bar HUD for Apple Silicon Macs and remote Linux VPS telemetry.">
+  <meta name="twitter:image" content="https://armako.co.uk/coredeck/vps-manager-v22.jpg">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "CoreDeck",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "macOS 13.0+ (Apple Silicon)",
+        "softwareVersion": "2.2.0",
+        "url": "https://armako.co.uk/coredeck/",
+        "downloadUrl": "https://armako.co.uk/coredeck/CoreDeck-Installer.dmg",
+        "description": "Lightweight native SwiftUI Apple Silicon menu bar HUD for Unified Memory, SWAP, Ollama/MLX VRAM ejection, Battery Sentinel Coffee Mode, and direct SSH Linux VPS monitoring.",
+        "author": {
+          "@type": "Organization",
+          "name": "ARMAKO Ltd",
+          "url": "https://armako.co.uk/"
+        },
+        "offers": {
+          "@type": "Offer",
+          "price": "14.99",
+          "priceCurrency": "USD",
+          "availability": "https://schema.org/InStock"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does CoreDeck differ from iStat Menus on Apple Silicon?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "CoreDeck is built purely in native Swift 6 and SwiftUI with zero Electron overhead, adding 1-click Ollama/MLX VRAM cache purge, a 30% Battery Sentinel Coffee Mode, and a dedicated native SSH Linux VPS fleet manager."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do I install CoreDeck via Homebrew?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Run brew install --cask Arielkap/tap/coredeck in macOS Terminal or download the signed DMG directly from armako.co.uk/coredeck/."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   
   <!-- Favicon & Fonts -->
   <link rel="icon" type="image/png" href="app-icon.png">
@@ -99,7 +162,7 @@
       </h1>
 
       <p class="mt-5 text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed px-2">
-        Purge VRAM & cache with 1-click. Kill runaway processes in 5ms. Monitor remote Hostinger & Linux VPS nodes via direct native SSH. <span class="text-cyan-400 font-semibold">Zero Electron. 768 KB native Swift 6.</span>
+        Purge VRAM & cache with 1-click. Kill runaway processes in 5ms. Monitor remote Linux & cloud VPS nodes via direct native SSH. <span class="text-cyan-400 font-semibold">Zero Electron. 768 KB native Swift 6.</span>
       </p>
 
       <!-- Buttons (Mobile Thumb Friendly) -->
@@ -216,7 +279,7 @@
           <div class="flex justify-between items-center text-[10px] font-bold">
             <div class="flex items-center gap-1.5 text-white truncate min-w-0">
               <span class="w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
-              <span class="truncate">HOSTINGER VPS</span>
+              <span class="truncate">LINUX VPS NODE</span>
             </div>
             <span class="text-[8px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30 shrink-0 ml-2">
               SSH (15ms)
@@ -290,7 +353,7 @@
                 <div>
                   <h3 class="text-sm font-bold text-white">Magic Paste SSH Parser</h3>
                   <p class="text-xs text-slate-400 mt-1 leading-relaxed">
-                    Paste <code class="text-cyan-300 font-mono">ssh root@ip</code>, <code class="text-cyan-300 font-mono">user@host:2222</code>, or a raw IP directly from Hostinger, Hetzner, DigitalOcean, or OVH — CoreDeck auto-fills user, host, and port instantly.
+                    Paste <code class="text-cyan-300 font-mono">ssh root@ip</code>, <code class="text-cyan-300 font-mono">user@host:2222</code>, or a raw IP directly from Hetzner, DigitalOcean, Linode, or OVH — CoreDeck auto-fills user, host, and port instantly.
                   </p>
                 </div>
               </div>
@@ -364,7 +427,7 @@
           <div class="text-2xl mb-3">🛰️</div>
           <h3 class="text-base font-bold text-white">Dual-Mode Fleet VPS HUD</h3>
           <p class="text-xs sm:text-sm text-slate-400 mt-2 leading-relaxed">
-            Zero-daemon setup. Connect directly to your Hostinger or Linux VPS via raw SSH using your panel credentials (15ms execution), or deploy the 1-liner HTTP micro-agent.
+            Zero-daemon setup. Connect directly to your Linux or cloud VPS via raw SSH using your panel credentials (15ms execution), or deploy the 1-liner HTTP micro-agent.
           </p>
         </div>
 
@@ -458,7 +521,7 @@
         <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
           <div class="font-bold text-white text-sm">How does the VPS monitoring work without open ports?</div>
           <p class="text-slate-400 mt-2 leading-relaxed">
-            In Mode 1 (SSH Direct), CoreDeck uses your Mac's native OpenSSH client to connect with your Hostinger or Linux panel credentials, executing a lightweight 15ms command that parses /proc. In Mode 2 (HTTP Agent), a simple 1-liner installer script sets up a systemd micro-daemon.
+            In Mode 1 (SSH Direct), CoreDeck uses your Mac's native OpenSSH client to connect with your Linux or cloud VPS credentials, executing a lightweight 15ms command that parses /proc. In Mode 2 (HTTP Agent), a simple 1-liner installer script sets up a systemd micro-daemon.
           </p>
         </div>
 
