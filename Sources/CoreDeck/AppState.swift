@@ -19,6 +19,7 @@ public final class AppState: ObservableObject {
     
     // Server Edit Form State (stored in AppState to avoid CLI macro issues)
     @Published public var inputServerConnectionType: ServerConnectionType = .ssh
+    @Published public var inputServerQuickConnect: String = ""
     @Published public var inputServerName: String = ""
     @Published public var inputServerHost: String = ""
     @Published public var inputServerPort: String = "22"
@@ -30,10 +31,14 @@ public final class AppState: ObservableObject {
     @Published public var inputServerKey: String = ""
     @Published public var editingServerId: UUID? = nil
     @Published public var isShowingAddServer: Bool = false
+    @Published public var lastTestFailed: Bool = false
+    @Published public var showAdvancedServerOptions: Bool = false
+    @Published public var discoveredSshKeys: [String] = SshInputParser.discoverLocalSshKeys()
     
     @Published public var isCompact: Bool = false
     @Published public var launchAtLogin: Bool = false
     @Published public var statusMessage: String?
+    @Published public var showReactorPopover: Bool = false
     
     // Localization
     @Published public var language: AppLanguage = .en
@@ -117,6 +122,16 @@ public final class AppState: ObservableObject {
         }
     }
     
+    public var reactorAdvice: (title: String, body: String) {
+        if stats.usedSwapGB > 1.5 || stats.ramPercent > 88.0 {
+            return (t(.reactorCriticalTitle), t(.reactorCriticalBody))
+        } else if stats.usedSwapGB > 0.5 || stats.ramPercent > 75.0 {
+            return (t(.reactorElevatedTitle), t(.reactorElevatedBody))
+        } else {
+            return (t(.reactorOptimalTitle), t(.reactorOptimalBody))
+        }
+    }
+    
     public var menuBarText: String {
         let coffeeEmoji = CoffeeManager.shared.isActive ? "☕️ " : ""
         let (icon, _, _) = reactorStatus
@@ -161,10 +176,34 @@ public final class AppState: ObservableObject {
         }
     }
     
+    private func keychainPasswordKey(for id: UUID) -> String { "vps_\(id.uuidString)_password" }
+    private func keychainApiKeyKey(for id: UUID) -> String { "vps_\(id.uuidString)_apikey" }
+    
     public func loadServers() {
+        var needsMigrationSave = false
         if let data = UserDefaults.standard.data(forKey: serversStorageKey),
-           let decoded = try? JSONDecoder().decode([VpsServerConfig].self, from: data) {
+           var decoded = try? JSONDecoder().decode([VpsServerConfig].self, from: data) {
+            for i in decoded.indices {
+                let sid = decoded[i].id
+                // Migrate legacy plaintext password/apiKey into Keychain if present
+                if !decoded[i].password.isEmpty {
+                    KeychainHelper.save(key: keychainPasswordKey(for: sid), value: decoded[i].password)
+                    needsMigrationSave = true
+                } else if let kcPass = KeychainHelper.load(key: keychainPasswordKey(for: sid)) {
+                    decoded[i].password = kcPass
+                }
+                
+                if !decoded[i].apiKey.isEmpty {
+                    KeychainHelper.save(key: keychainApiKeyKey(for: sid), value: decoded[i].apiKey)
+                    needsMigrationSave = true
+                } else if let kcKey = KeychainHelper.load(key: keychainApiKeyKey(for: sid)) {
+                    decoded[i].apiKey = kcKey
+                }
+            }
             self.servers = decoded
+            if needsMigrationSave {
+                self.saveServers()
+            }
         }
         if let savedIdStr = UserDefaults.standard.string(forKey: selectedServerStorageKey),
            let savedUUID = UUID(uuidString: savedIdStr) {
@@ -175,7 +214,16 @@ public final class AppState: ObservableObject {
     }
     
     public func saveServers() {
-        if let data = try? JSONEncoder().encode(self.servers) {
+        // Persist secrets in Keychain and strip them before writing JSON to UserDefaults
+        let sanitized: [VpsServerConfig] = self.servers.map { srv in
+            KeychainHelper.save(key: keychainPasswordKey(for: srv.id), value: srv.password)
+            KeychainHelper.save(key: keychainApiKeyKey(for: srv.id), value: srv.apiKey)
+            var copy = srv
+            copy.password = ""
+            copy.apiKey = ""
+            return copy
+        }
+        if let data = try? JSONEncoder().encode(sanitized) {
             UserDefaults.standard.set(data, forKey: serversStorageKey)
         }
         if let id = selectedServerId {
@@ -200,14 +248,17 @@ public final class AppState: ObservableObject {
         isEnabled: Bool = true
     ) {
         let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let defaultName = connectionType == .ssh ? (language == .en ? "SSH Server" : "Serwer SSH") : (language == .en ? "HTTP Server" : "Serwer HTTP")
-        let finalName = cleanName.isEmpty ? defaultName : cleanName
+        let cleanHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallbackName = connectionType == .ssh
+            ? (cleanHost.isEmpty ? (language == .en ? "SSH Server" : "Serwer SSH") : cleanHost)
+            : (language == .en ? "HTTP Server" : "Serwer HTTP")
+        let finalName = cleanName.isEmpty ? fallbackName : cleanName
         
         let newConfig = VpsServerConfig(
             id: id ?? UUID(),
             name: finalName,
             connectionType: connectionType,
-            host: host.trimmingCharacters(in: .whitespacesAndNewlines),
+            host: cleanHost,
             port: port,
             user: user.trimmingCharacters(in: .whitespacesAndNewlines),
             authType: authType,
@@ -222,15 +273,15 @@ public final class AppState: ObservableObject {
             servers[idx] = newConfig
         } else {
             servers.append(newConfig)
-            if selectedServerId == nil {
-                selectedServerId = newConfig.id
-            }
+            selectedServerId = newConfig.id
         }
         saveServers()
         refreshVps()
     }
     
     public func deleteServer(id: UUID) {
+        KeychainHelper.delete(key: keychainPasswordKey(for: id))
+        KeychainHelper.delete(key: keychainApiKeyKey(for: id))
         servers.removeAll(where: { $0.id == id })
         if selectedServerId == id {
             selectedServerId = servers.first?.id
@@ -245,29 +296,119 @@ public final class AppState: ObservableObject {
         refreshVps()
     }
     
-    public func testServer(server: VpsServerConfig) async -> (success: Bool, message: String) {
+    public func applyMagicPaste(_ raw: String) {
+        let parsed = SshInputParser.parse(raw)
+        self.inputServerHost = parsed.host
+        if let u = parsed.user {
+            self.inputServerUser = u
+        } else if self.inputServerUser.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            self.inputServerUser = "root"
+        }
+        if let p = parsed.port {
+            self.inputServerPort = "\(p)"
+        }
+        if let k = parsed.keyPath {
+            self.inputServerKeyPath = k
+            self.inputServerAuthType = "key"
+        }
+        self.lastTestFailed = false
+    }
+    
+    private func buildDraftServerConfig(resolvedName: String? = nil) -> VpsServerConfig {
+        let preferredName = inputServerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalName = preferredName.isEmpty ? (resolvedName ?? "") : preferredName
+        return VpsServerConfig(
+            id: editingServerId ?? UUID(),
+            name: finalName,
+            connectionType: inputServerConnectionType,
+            host: inputServerHost.trimmingCharacters(in: .whitespacesAndNewlines),
+            port: Int(inputServerPort) ?? 22,
+            user: inputServerUser.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "root" : inputServerUser.trimmingCharacters(in: .whitespacesAndNewlines),
+            authType: inputServerAuthType,
+            password: inputServerPassword,
+            keyPath: inputServerKeyPath.trimmingCharacters(in: .whitespacesAndNewlines),
+            urlString: inputServerUrl.trimmingCharacters(in: .whitespacesAndNewlines),
+            apiKey: inputServerKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+    
+    public func testServer(server: VpsServerConfig) async -> (success: Bool, message: String, telemetry: VpsTelemetry?) {
         self.isTestingServer = true
+        self.lastTestFailed = false
         self.serverTestMessage = t(.testingConnection)
-        let result = await SystemTelemetry.shared.testServerConnection(server: server)
+        let result = await SystemTelemetry.shared.testServerConnection(server: server, lang: language)
         self.isTestingServer = false
+        self.lastTestFailed = !result.success
         self.serverTestMessage = (result.success ? "🟢 " : "🔴 ") + result.message
         return result
+    }
+    
+    public func connectAndSaveServer() async -> Bool {
+        let draft = buildDraftServerConfig()
+        let result = await testServer(server: draft)
+        guard result.success else { return false }
+        
+        let autoName = result.telemetry?.hostname
+        let finalName = inputServerName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? (autoName ?? draft.host)
+            : inputServerName
+        
+        addOrUpdateServer(
+            id: editingServerId,
+            name: finalName,
+            connectionType: draft.connectionType,
+            host: draft.host,
+            port: draft.port,
+            user: draft.user,
+            authType: draft.authType,
+            password: draft.password,
+            keyPath: draft.keyPath,
+            urlString: draft.urlString,
+            apiKey: draft.apiKey
+        )
+        if let tele = result.telemetry {
+            self.vps = tele
+        }
+        self.editingServerId = nil
+        self.isShowingAddServer = false
+        self.lastTestFailed = false
+        return true
+    }
+    
+    public func saveCurrentServerIgnoringTest() {
+        let draft = buildDraftServerConfig()
+        addOrUpdateServer(
+            id: editingServerId,
+            name: draft.name,
+            connectionType: draft.connectionType,
+            host: draft.host,
+            port: draft.port,
+            user: draft.user,
+            authType: draft.authType,
+            password: draft.password,
+            keyPath: draft.keyPath,
+            urlString: draft.urlString,
+            apiKey: draft.apiKey
+        )
+        cancelServerEdit()
     }
     
     public func startAddServer() {
         self.editingServerId = nil
         self.inputServerConnectionType = .ssh
+        self.inputServerQuickConnect = ""
         self.inputServerName = ""
         self.inputServerHost = ""
         self.inputServerPort = "22"
         self.inputServerUser = "root"
         self.inputServerAuthType = "password"
         self.inputServerPassword = ""
-        self.inputServerKeyPath = "~/.ssh/id_ed25519"
+        self.inputServerKeyPath = SshInputParser.discoverLocalSshKeys().first ?? "~/.ssh/id_ed25519"
         self.inputServerUrl = ""
         self.inputServerKey = ""
         self.isShowingAddServer = true
         self.serverTestMessage = nil
+        self.lastTestFailed = false
     }
     
     public func startEditServer(server: VpsServerConfig) {
@@ -277,6 +418,7 @@ public final class AppState: ObservableObject {
         self.inputServerHost = server.host
         self.inputServerPort = "\(server.port)"
         self.inputServerUser = server.user
+        self.inputServerQuickConnect = server.port == 22 ? "\(server.user)@\(server.host)" : "ssh -p \(server.port) \(server.user)@\(server.host)"
         self.inputServerAuthType = server.authType
         self.inputServerPassword = server.password
         self.inputServerKeyPath = server.keyPath.isEmpty ? "~/.ssh/id_ed25519" : server.keyPath
@@ -284,12 +426,14 @@ public final class AppState: ObservableObject {
         self.inputServerKey = server.apiKey
         self.isShowingAddServer = true
         self.serverTestMessage = nil
+        self.lastTestFailed = false
     }
     
     public func cancelServerEdit() {
         self.editingServerId = nil
         self.isShowingAddServer = false
         self.serverTestMessage = nil
+        self.lastTestFailed = false
     }
     
     public func killHog(pid: Int32, name: String, force: Bool) {

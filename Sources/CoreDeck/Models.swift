@@ -8,6 +8,30 @@ public struct ProcessHog: Identifiable, Sendable {
     public let icon: String
     public let category: String
     
+    public enum HogSeverity: Sendable {
+        case normal
+        case elevated
+        case critical
+    }
+    
+    public var severity: HogSeverity {
+        if memMB >= 1536.0 {
+            return .critical
+        } else if memMB >= 512.0 {
+            return .elevated
+        } else {
+            return .normal
+        }
+    }
+    
+    public var statusIcon: String {
+        switch severity {
+        case .critical: return "flame.fill"
+        case .elevated: return "exclamationmark.triangle.fill"
+        case .normal: return icon
+        }
+    }
+    
     public var formattedMem: String {
         if memMB >= 1024 {
             return String(format: "%.2f GB", memMB / 1024.0)

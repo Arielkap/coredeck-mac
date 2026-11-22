@@ -333,6 +333,23 @@ public final class SystemTelemetry: @unchecked Sendable {
         }
     }
     
+    public enum SshErrorKind: Sendable {
+        case authFailed
+        case timeout
+        case connectionRefused
+        case dnsFailed
+        case hostKeyChanged
+        case keyPermissions
+        case keyMissing
+        case unknown
+    }
+    
+    public struct ServerTestResult: Sendable {
+        public let telemetry: VpsTelemetry?
+        public let errorKind: SshErrorKind?
+        public let rawError: String?
+    }
+    
     public func fetchVpsTelemetry(server: VpsServerConfig) async -> VpsTelemetry? {
         switch server.connectionType {
         case .ssh:
@@ -359,7 +376,7 @@ public final class SystemTelemetry: @unchecked Sendable {
         guard let url = URL(string: urlStr) else { return nil }
         var req = URLRequest(url: url)
         req.timeoutInterval = 4.0
-        req.setValue("CoreDeckNative/2.0", forHTTPHeaderField: "User-Agent")
+        req.setValue("CoreDeckNative/2.2", forHTTPHeaderField: "User-Agent")
         if !cleanKey.isEmpty {
             req.setValue(cleanKey, forHTTPHeaderField: "X-API-Key")
             req.setValue("Bearer \(cleanKey)", forHTTPHeaderField: "Authorization")
@@ -375,8 +392,40 @@ public final class SystemTelemetry: @unchecked Sendable {
     }
     
     public func fetchSshTelemetry(server: VpsServerConfig) async -> VpsTelemetry? {
+        return await fetchSshTelemetryWithDiagnostics(server: server).telemetry
+    }
+    
+    private static func classifySshStderr(_ stderr: String) -> SshErrorKind {
+        let lower = stderr.lowercased()
+        if lower.contains("permission denied") || lower.contains("authentication failed") || lower.contains("too many authentication failures") {
+            return .authFailed
+        }
+        if lower.contains("operation timed out") || lower.contains("connection timed out") || lower.contains("timed out") {
+            return .timeout
+        }
+        if lower.contains("connection refused") || lower.contains("no route to host") || lower.contains("network is unreachable") {
+            return .connectionRefused
+        }
+        if lower.contains("could not resolve hostname") || lower.contains("nodename nor servname") || lower.contains("name or service not known") {
+            return .dnsFailed
+        }
+        if lower.contains("host key verification failed") || lower.contains("remote host identification has changed") {
+            return .hostKeyChanged
+        }
+        if lower.contains("unprotected private key") || lower.contains("bad permissions") {
+            return .keyPermissions
+        }
+        if lower.contains("no such file or directory") || lower.contains("invalid format") {
+            return .keyMissing
+        }
+        return .unknown
+    }
+    
+    public func fetchSshTelemetryWithDiagnostics(server: VpsServerConfig) async -> ServerTestResult {
         let cleanHost = server.host.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanHost.isEmpty else { return nil }
+        guard !cleanHost.isEmpty else {
+            return ServerTestResult(telemetry: nil, errorKind: .dnsFailed, rawError: "Empty host")
+        }
         
         let portStr = "\(server.port)"
         let userStr = server.user.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "root" : server.user.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -384,14 +433,14 @@ public final class SystemTelemetry: @unchecked Sendable {
         
         let remoteCmd = "LOAD=$(cat /proc/loadavg | awk '{print $1,$2,$3}') && RAM=$(awk '/^MemTotal:/{t=$2}/^MemAvailable:/{a=$2}END{u=t-a; printf \"%.1f %.1f %.1f\", t/1024, u/1024, (u/t)*100}' /proc/meminfo) && DISK=$(df -m / | tail -n 1 | awk '{t=$2/1024; u=$3/1024; f=$4/1024; p=$5; sub(/%/,\"\",p); printf \"%.1f %.1f %.1f %.1f\", t, u, f, p}') && UP=$(awk '{d=int($1/86400); h=int(($1%86400)/3600); if(d>0) printf \"%dd %dh\", d, h; else printf \"%dh\", h}' /proc/uptime) && HOST=$(hostname) && echo \"$HOST|$LOAD|$RAM|$DISK|$UP\""
         
-        return await Task.detached { () -> VpsTelemetry? in
+        return await Task.detached { () -> ServerTestResult in
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
             
             var args = [
                 "-p", portStr,
                 "-o", "StrictHostKeyChecking=accept-new",
-                "-o", "ConnectTimeout=5",
+                "-o", "ConnectTimeout=6",
                 "-o", "ServerAliveInterval=3",
                 "-o", "ServerAliveCountMax=1"
             ]
@@ -402,8 +451,12 @@ public final class SystemTelemetry: @unchecked Sendable {
             if server.authType == "password" && !server.password.isEmpty {
                 let randomId = UUID().uuidString.prefix(8)
                 let askpassFile = "/tmp/coredeck_askpass_\(randomId).sh"
-                let escapedPassword = server.password.replacingOccurrences(of: "\"", with: "\\\"").replacingOccurrences(of: "$", with: "\\$")
-                let scriptContent = "#!/bin/sh\necho \"\(escapedPassword)\"\n"
+                let escapedPassword = server.password
+                    .replacingOccurrences(of: "\\", with: "\\\\")
+                    .replacingOccurrences(of: "\"", with: "\\\"")
+                    .replacingOccurrences(of: "$", with: "\\$")
+                    .replacingOccurrences(of: "`", with: "\\`")
+                let scriptContent = "#!/bin/sh\nprintf '%s\\n' \"\(escapedPassword)\"\n"
                 
                 if (try? scriptContent.write(toFile: askpassFile, atomically: true, encoding: .utf8)) != nil {
                     chmod(askpassFile, 0o700)
@@ -411,7 +464,7 @@ public final class SystemTelemetry: @unchecked Sendable {
                     environment["SSH_ASKPASS"] = askpassFile
                     environment["SSH_ASKPASS_REQUIRE"] = "force"
                     environment["DISPLAY"] = "coredeck:0"
-                    args.append(contentsOf: ["-o", "BatchMode=no"])
+                    args.append(contentsOf: ["-o", "BatchMode=no", "-o", "NumberOfPasswordPrompts=1"])
                 } else {
                     args.append(contentsOf: ["-o", "BatchMode=yes"])
                 }
@@ -419,6 +472,9 @@ public final class SystemTelemetry: @unchecked Sendable {
                 args.append(contentsOf: ["-o", "BatchMode=yes"])
                 if server.authType == "key" && !server.keyPath.isEmpty {
                     let expandedKey = (server.keyPath as NSString).expandingTildeInPath
+                    if !FileManager.default.fileExists(atPath: expandedKey) {
+                        return ServerTestResult(telemetry: nil, errorKind: .keyMissing, rawError: "Key file not found: \(server.keyPath)")
+                    }
                     args.append(contentsOf: ["-i", expandedKey])
                 }
             }
@@ -429,9 +485,10 @@ public final class SystemTelemetry: @unchecked Sendable {
             process.arguments = args
             process.environment = environment
             
-            let pipe = Pipe()
-            process.standardOutput = pipe
-            process.standardError = Pipe()
+            let stdoutPipe = Pipe()
+            let stderrPipe = Pipe()
+            process.standardOutput = stdoutPipe
+            process.standardError = stderrPipe
             
             do {
                 try process.run()
@@ -441,13 +498,23 @@ public final class SystemTelemetry: @unchecked Sendable {
                     try? FileManager.default.removeItem(atPath: temp)
                 }
                 
-                guard process.terminationStatus == 0 else { return nil }
+                let errData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                let stderrText = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 
-                let data = pipe.fileHandleForReading.readDataToEndOfFile()
-                guard let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
+                guard process.terminationStatus == 0 else {
+                    let kind = Self.classifySshStderr(stderrText)
+                    return ServerTestResult(telemetry: nil, errorKind: kind, rawError: stderrText)
+                }
+                
+                let data = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+                guard let output = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) else {
+                    return ServerTestResult(telemetry: nil, errorKind: .unknown, rawError: "Empty response")
+                }
                 
                 let parts = output.components(separatedBy: "|")
-                guard parts.count >= 5 else { return nil }
+                guard parts.count >= 5 else {
+                    return ServerTestResult(telemetry: nil, errorKind: .unknown, rawError: "Unexpected output format")
+                }
                 
                 let hostName = parts[0]
                 let loadParts = parts[1].components(separatedBy: " ").compactMap { Double($0) }
@@ -469,7 +536,7 @@ public final class SystemTelemetry: @unchecked Sendable {
                 
                 let upTime = parts[4]
                 
-                return VpsTelemetry(
+                let tele = VpsTelemetry(
                     status: "online",
                     hostname: hostName,
                     ram: ramStats,
@@ -478,25 +545,46 @@ public final class SystemTelemetry: @unchecked Sendable {
                     disk: diskStats,
                     timestamp: "\(Date().timeIntervalSince1970)"
                 )
+                return ServerTestResult(telemetry: tele, errorKind: nil, rawError: nil)
             } catch {
                 if let temp = tempAskpassPath {
                     try? FileManager.default.removeItem(atPath: temp)
                 }
-                return nil
+                return ServerTestResult(telemetry: nil, errorKind: .unknown, rawError: error.localizedDescription)
             }
         }.value
     }
     
-    public func testServerConnection(server: VpsServerConfig) async -> (success: Bool, message: String) {
-        if let tele = await fetchVpsTelemetry(server: server) {
-            let host = tele.hostname ?? server.name
-            let mode = server.connectionType == .ssh ? "SSH" : "HTTP"
-            return (true, "Połączono (\(mode)) z \(host) • RAM: \(Int(tele.ram?.percent ?? 0))%")
-        } else {
-            if server.connectionType == .ssh {
-                return (false, "Błąd SSH: Sprawdź Host/IP (\(server.host)), Port, Użytkownika lub Hasło/Klucz")
+    public func testServerConnection(server: VpsServerConfig, lang: AppLanguage = .en) async -> (success: Bool, message: String, telemetry: VpsTelemetry?) {
+        if server.connectionType == .ssh {
+            let result = await fetchSshTelemetryWithDiagnostics(server: server)
+            if let tele = result.telemetry {
+                let host = tele.hostname ?? (server.name.isEmpty ? server.host : server.name)
+                let ramPct = Int(tele.ram?.percent ?? 0)
+                let prefix = L10n.text(.connectedSummary, lang: lang)
+                return (true, "\(prefix) \(host) • RAM \(ramPct)%", tele)
             } else {
-                return (false, "Błąd HTTP: Brak odpowiedzi z endpointu \(server.urlString)")
+                let errKey: L10nKey
+                switch result.errorKind ?? .unknown {
+                case .authFailed: errKey = .sshErrAuth
+                case .timeout: errKey = .sshErrTimeout
+                case .connectionRefused: errKey = .sshErrRefused
+                case .dnsFailed: errKey = .sshErrDns
+                case .hostKeyChanged: errKey = .sshErrHostKey
+                case .keyPermissions: errKey = .sshErrKeyPerm
+                case .keyMissing: errKey = .sshErrKeyMissing
+                case .unknown: errKey = .sshErrGeneric
+                }
+                return (false, L10n.text(errKey, lang: lang), nil)
+            }
+        } else {
+            if let tele = await fetchHttpTelemetry(server: server) {
+                let host = tele.hostname ?? (server.name.isEmpty ? server.urlString : server.name)
+                let ramPct = Int(tele.ram?.percent ?? 0)
+                let prefix = L10n.text(.connectedSummary, lang: lang)
+                return (true, "\(prefix) \(host) (HTTP) • RAM \(ramPct)%", tele)
+            } else {
+                return (false, L10n.text(.httpErrGeneric, lang: lang), nil)
             }
         }
     }

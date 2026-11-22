@@ -1,12 +1,25 @@
 import SwiftUI
+import AppKit
 
 public struct CoreDeckView: View {
     @ObservedObject var state: AppState
     @ObservedObject var license = LicenseManager.shared
     @ObservedObject var coffee = CoffeeManager.shared
+    @Environment(\.openWindow) private var openWindow
     
     public init(state: AppState) {
         self.state = state
+    }
+    
+    private func openServerManager(startAdding: Bool = false) {
+        if startAdding || state.servers.isEmpty {
+            state.startAddServer()
+        } else {
+            state.isShowingAddServer = false
+            state.serverTestMessage = nil
+        }
+        openWindow(id: "vps-manager")
+        NSApp.activate(ignoringOtherApps: true)
     }
     
     public var body: some View {
@@ -61,8 +74,9 @@ public struct CoreDeckView: View {
                     .buttonStyle(.plain)
                 }
                 
-                // Status Pill
+                // Status Pill with Hover/Click Advice Popover
                 let (icon, color, label) = state.reactorStatus
+                let advice = state.reactorAdvice
                 HStack(spacing: 4) {
                     Image(systemName: icon)
                         .font(.system(size: 10, weight: .bold))
@@ -74,6 +88,34 @@ public struct CoreDeckView: View {
                 .background(color.opacity(0.15))
                 .foregroundColor(color)
                 .clipShape(Capsule())
+                .onHover { hovering in
+                    state.showReactorPopover = hovering
+                }
+                .onTapGesture {
+                    state.showReactorPopover.toggle()
+                }
+                .popover(isPresented: $state.showReactorPopover, arrowEdge: .bottom) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 6) {
+                            Image(systemName: icon)
+                                .foregroundColor(color)
+                                .font(.system(size: 12, weight: .bold))
+                            Text(advice.title)
+                                .font(.system(size: 11, weight: .bold))
+                        }
+                        
+                        Text("RAM: \(Int(state.stats.ramPercent))%  •  Swap: \(String(format: "%.2f GB", state.stats.usedSwapGB))")
+                            .font(.system(size: 9.5, weight: .semibold, design: .monospaced))
+                            .foregroundColor(color)
+                        
+                        Text(advice.body)
+                            .font(.system(size: 10.5))
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(12)
+                    .frame(width: 250, alignment: .leading)
+                }
                 
                 // Refresh Button
                 Button {
@@ -298,11 +340,36 @@ public struct CoreDeckView: View {
                         .padding(.vertical, 4)
                 } else {
                     ForEach(state.hogs) { hog in
+                        let sevColor: Color = {
+                            switch hog.severity {
+                            case .critical: return .red
+                            case .elevated: return .orange
+                            case .normal: return .cyan
+                            }
+                        }()
+                        let sevHelp: String = {
+                            switch hog.severity {
+                            case .critical:
+                                return state.language == .en
+                                    ? "Heavy RAM usage (\(hog.formattedMem)) — close (TERM/KILL) if not needed"
+                                    : "Pożera dużo RAM (\(hog.formattedMem)) — lepiej zamknąć (TERM/KILL), jeśli nie jest używany"
+                            case .elevated:
+                                return state.language == .en
+                                    ? "Elevated RAM usage (\(hog.formattedMem)) — consider closing if memory is tight"
+                                    : "Podwyższone zużycie RAM (\(hog.formattedMem)) — warto zamknąć przy braku pamięci"
+                            case .normal:
+                                return state.language == .en
+                                    ? "Normal RAM usage (\(hog.formattedMem))"
+                                    : "Normalne zużycie RAM (\(hog.formattedMem))"
+                            }
+                        }()
+                        
                         HStack(spacing: 8) {
-                            Image(systemName: hog.icon)
-                                .font(.system(size: 12))
-                                .foregroundColor(.cyan)
+                            Image(systemName: hog.statusIcon)
+                                .font(.system(size: 12, weight: hog.severity == .critical ? .bold : .regular))
+                                .foregroundColor(sevColor)
                                 .frame(width: 16)
+                                .help(sevHelp)
                             
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(hog.displayName)
@@ -317,7 +384,7 @@ public struct CoreDeckView: View {
                             
                             Text(hog.formattedMem)
                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundColor(.orange)
+                                .foregroundColor(hog.severity == .normal ? .secondary : sevColor)
                             
                             if license.isPro {
                                 Button {
@@ -530,520 +597,164 @@ public struct CoreDeckView: View {
                         }
                     }
                     
-                    // Toggle Server Configuration Table / Drawer
+                    // Open Dedicated Server Manager Window
                     Button {
-                        withAnimation {
-                            state.isConfiguringServers.toggle()
-                            state.serverTestMessage = nil
-                        }
+                        openServerManager(startAdding: state.servers.isEmpty)
                     } label: {
                         HStack(spacing: 3) {
-                            Image(systemName: state.isConfiguringServers ? "xmark" : "slider.horizontal.3")
+                            Image(systemName: "slider.horizontal.3")
                                 .font(.system(size: 9, weight: .bold))
-                            Text(state.isConfiguringServers ? state.t(.closeBtn) : (state.servers.isEmpty ? state.t(.configureBtn) : state.t(.serversBtn)))
+                            Text(state.servers.isEmpty ? state.t(.configureBtn) : state.t(.serversBtn))
                                 .font(.system(size: 9, weight: .bold, design: .monospaced))
                         }
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(state.isConfiguringServers ? Color.red.opacity(0.15) : Color.secondary.opacity(0.12))
-                        .foregroundColor(state.isConfiguringServers ? .red : .primary)
+                        .background(Color.secondary.opacity(0.12))
+                        .foregroundColor(.primary)
                         .cornerRadius(4)
                     }
                     .buttonStyle(.plain)
                 }
                 
-                // Content: Either Config Table or Telemetry Display
-                if state.isConfiguringServers {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(state.t(.serversTableTitle))
-                                .font(.system(size: 9, weight: .heavy, design: .monospaced))
-                                .foregroundColor(.secondary)
-                            Spacer()
-                            if !state.isShowingAddServer {
-                                Button {
-                                    withAnimation {
-                                        state.startAddServer()
-                                    }
-                                } label: {
-                                    HStack(spacing: 3) {
-                                        Image(systemName: "plus")
-                                        Text(state.t(.addServer))
-                                    }
-                                    .font(.system(size: 9, weight: .bold))
-                                    .foregroundColor(.cyan)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        
-                        // Server Table
-                        if !state.servers.isEmpty {
-                            VStack(spacing: 4) {
+                // Telemetry Display
+                if let server = state.activeServer {
+                    // Multi-server switcher pills if more than 1 server
+                    if state.servers.count > 1 {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 4) {
                                 ForEach(state.servers) { s in
-                                    HStack(spacing: 6) {
-                                        // Active selection radio
-                                        Button {
-                                            state.selectServer(id: s.id)
-                                        } label: {
-                                            Image(systemName: state.selectedServerId == s.id ? "largecircle.fill.circle" : "circle")
-                                                .font(.system(size: 10))
-                                                .foregroundColor(state.selectedServerId == s.id ? .green : .secondary)
-                                        }
-                                        .buttonStyle(.plain)
-                                        
-                                        VStack(alignment: .leading, spacing: 1) {
-                                            HStack(spacing: 4) {
-                                                Text(s.name)
-                                                    .font(.system(size: 10, weight: .bold))
-                                                    .foregroundColor(state.selectedServerId == s.id ? .primary : .secondary)
-                                                
-                                                Text(s.connectionType.rawValue)
-                                                    .font(.system(size: 7, weight: .heavy, design: .monospaced))
-                                                    .padding(.horizontal, 3)
-                                                    .padding(.vertical, 0.5)
-                                                    .background(s.connectionType == .ssh ? Color.orange.opacity(0.2) : Color.cyan.opacity(0.2))
-                                                    .foregroundColor(s.connectionType == .ssh ? .orange : .cyan)
-                                                    .cornerRadius(3)
-                                                
-                                                if state.selectedServerId == s.id {
-                                                    Text(state.t(.activeBadge))
-                                                        .font(.system(size: 7, weight: .heavy, design: .monospaced))
-                                                        .padding(.horizontal, 3)
-                                                        .padding(.vertical, 0.5)
-                                                        .background(Color.green.opacity(0.2))
-                                                        .foregroundColor(.green)
-                                                        .cornerRadius(3)
-                                                }
-                                            }
-                                            Text(s.connectionType == .ssh ? "\(s.user)@\(s.host):\(s.port)" : s.urlString)
-                                                .font(.system(size: 8, design: .monospaced))
-                                                .foregroundColor(.secondary)
-                                                .lineLimit(1)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        // Edit button
-                                        Button {
-                                            withAnimation {
-                                                state.startEditServer(server: s)
-                                            }
-                                        } label: {
-                                            Image(systemName: "pencil")
-                                                .font(.system(size: 9))
-                                                .foregroundColor(.secondary)
-                                        }
-                                        .buttonStyle(.plain)
-                                        
-                                        // Delete button
-                                        Button {
-                                            state.deleteServer(id: s.id)
-                                            if state.editingServerId == s.id {
-                                                state.cancelServerEdit()
-                                            }
-                                        } label: {
-                                            Image(systemName: "trash")
-                                                .font(.system(size: 9))
-                                                .foregroundColor(.red.opacity(0.8))
-                                        }
-                                        .buttonStyle(.plain)
+                                    let isSelected = (state.selectedServerId == s.id)
+                                    Button {
+                                        state.selectServer(id: s.id)
+                                    } label: {
+                                        Text(s.name)
+                                            .font(.system(size: 8, weight: isSelected ? .bold : .regular, design: .monospaced))
+                                            .padding(.horizontal, 6)
+                                            .padding(.vertical, 2)
+                                            .background(isSelected ? Color.cyan.opacity(0.2) : Color.secondary.opacity(0.1))
+                                            .foregroundColor(isSelected ? Color.cyan : Color.secondary)
+                                            .cornerRadius(3)
                                     }
-                                    .padding(5)
-                                    .background(state.selectedServerId == s.id ? Color.cyan.opacity(0.08) : Color.secondary.opacity(0.04))
-                                    .cornerRadius(5)
+                                    .buttonStyle(.plain)
                                 }
                             }
-                        } else if !state.isShowingAddServer {
-                            Text(state.t(.noServersConfiguredPrompt))
-                                .font(.system(size: 9))
-                                .foregroundColor(.secondary)
-                                .padding(.vertical, 4)
-                        }
-                        
-                        // Add / Edit Server Form
-                        if state.isShowingAddServer || state.servers.isEmpty {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(state.editingServerId != nil ? state.t(.editServerTitle) : state.t(.addServerTitle))
-                                    .font(.system(size: 9, weight: .heavy, design: .monospaced))
-                                    .foregroundColor(.cyan)
-                                
-                                // Protocol Selector: SSH vs HTTP
-                                HStack(spacing: 4) {
-                                    Button {
-                                        withAnimation { state.inputServerConnectionType = .ssh }
-                                    } label: {
-                                        HStack(spacing: 3) {
-                                            Image(systemName: "terminal.fill")
-                                            Text(state.t(.sshTab))
-                                        }
-                                        .font(.system(size: 8, weight: .bold))
-                                        .padding(.vertical, 3)
-                                        .frame(maxWidth: .infinity)
-                                        .background(state.inputServerConnectionType == .ssh ? Color.orange.opacity(0.25) : Color.secondary.opacity(0.08))
-                                        .foregroundColor(state.inputServerConnectionType == .ssh ? .orange : .secondary)
-                                        .cornerRadius(4)
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    Button {
-                                        withAnimation { state.inputServerConnectionType = .http }
-                                    } label: {
-                                        HStack(spacing: 3) {
-                                            Image(systemName: "network")
-                                            Text(state.t(.httpTab))
-                                        }
-                                        .font(.system(size: 8, weight: .bold))
-                                        .padding(.vertical, 3)
-                                        .frame(maxWidth: .infinity)
-                                        .background(state.inputServerConnectionType == .http ? Color.cyan.opacity(0.25) : Color.secondary.opacity(0.08))
-                                        .foregroundColor(state.inputServerConnectionType == .http ? .cyan : .secondary)
-                                        .cornerRadius(4)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                                
-                                TextField(state.t(.serverNamePlaceholder), text: $state.inputServerName)
-                                    .textFieldStyle(.roundedBorder)
-                                    .font(.system(size: 10))
-                                
-                                if state.inputServerConnectionType == .ssh {
-                                    // SSH Mode Inputs
-                                    Text(state.t(.sshInstructions))
-                                        .font(.system(size: 8))
-                                        .foregroundColor(.secondary)
-                                    
-                                    TextField(state.t(.hostPlaceholder), text: $state.inputServerHost)
-                                        .textFieldStyle(.roundedBorder)
-                                        .font(.system(size: 10, design: .monospaced))
-                                    
-                                    HStack(spacing: 6) {
-                                        TextField(state.t(.userPlaceholder), text: $state.inputServerUser)
-                                            .textFieldStyle(.roundedBorder)
-                                            .font(.system(size: 10, design: .monospaced))
-                                            .frame(maxWidth: .infinity)
-                                        
-                                        TextField(state.t(.portPlaceholder), text: $state.inputServerPort)
-                                            .textFieldStyle(.roundedBorder)
-                                            .font(.system(size: 10, design: .monospaced))
-                                            .frame(width: 55)
-                                    }
-                                    
-                                    HStack(spacing: 6) {
-                                        Button {
-                                            state.inputServerAuthType = "password"
-                                        } label: {
-                                            Text(state.t(.sshPasswordAuth))
-                                                .font(.system(size: 8, weight: state.inputServerAuthType == "password" ? .bold : .regular))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(state.inputServerAuthType == "password" ? Color.orange.opacity(0.2) : Color.clear)
-                                                .foregroundColor(state.inputServerAuthType == "password" ? .orange : .secondary)
-                                                .cornerRadius(3)
-                                        }
-                                        .buttonStyle(.plain)
-                                        
-                                        Button {
-                                            state.inputServerAuthType = "key"
-                                        } label: {
-                                            Text(state.t(.sshKeyAuth))
-                                                .font(.system(size: 8, weight: state.inputServerAuthType == "key" ? .bold : .regular))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(state.inputServerAuthType == "key" ? Color.orange.opacity(0.2) : Color.clear)
-                                                .foregroundColor(state.inputServerAuthType == "key" ? .orange : .secondary)
-                                                .cornerRadius(3)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    
-                                    if state.inputServerAuthType == "password" {
-                                        SecureField(state.t(.sshPasswordPlaceholder), text: $state.inputServerPassword)
-                                            .textFieldStyle(.roundedBorder)
-                                            .font(.system(size: 10, design: .monospaced))
-                                    } else {
-                                        TextField(state.t(.sshKeyPathPlaceholder), text: $state.inputServerKeyPath)
-                                            .textFieldStyle(.roundedBorder)
-                                            .font(.system(size: 10, design: .monospaced))
-                                    }
-                                } else {
-                                    // HTTP Mode Inputs
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(state.t(.httpInstructions))
-                                            .font(.system(size: 8))
-                                            .foregroundColor(.secondary)
-                                        
-                                        HStack {
-                                            Text("curl -fsSL https://raw.githubusercontent.com/Arielkap/coredeck-mac/main/tools/install_agent.sh | bash")
-                                                .font(.system(size: 7.5, design: .monospaced))
-                                                .lineLimit(1)
-                                                .foregroundColor(.cyan)
-                                            
-                                            Spacer()
-                                            
-                                            Button {
-                                                NSPasteboard.general.clearContents()
-                                                NSPasteboard.general.setString("curl -fsSL https://raw.githubusercontent.com/Arielkap/coredeck-mac/main/tools/install_agent.sh | bash", forType: .string)
-                                                state.serverTestMessage = state.t(.commandCopied)
-                                            } label: {
-                                                Image(systemName: "doc.on.doc")
-                                                    .font(.system(size: 8))
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                        .padding(4)
-                                        .background(Color.black.opacity(0.3))
-                                        .cornerRadius(4)
-                                    }
-                                    
-                                    TextField(state.t(.httpUrlPlaceholder), text: $state.inputServerUrl)
-                                        .textFieldStyle(.roundedBorder)
-                                        .font(.system(size: 10, design: .monospaced))
-                                    
-                                    SecureField(state.t(.httpKeyPlaceholder), text: $state.inputServerKey)
-                                        .textFieldStyle(.roundedBorder)
-                                        .font(.system(size: 10, design: .monospaced))
-                                }
-                                
-                                if let testMsg = state.serverTestMessage {
-                                    Text(testMsg)
-                                        .font(.system(size: 8, weight: .semibold))
-                                        .foregroundColor(testMsg.hasPrefix("🟢") ? .green : .red)
-                                }
-                                
-                                HStack(spacing: 6) {
-                                    // Test button
-                                    Button {
-                                        Task {
-                                            let temp = VpsServerConfig(
-                                                name: state.inputServerName,
-                                                connectionType: state.inputServerConnectionType,
-                                                host: state.inputServerHost,
-                                                port: Int(state.inputServerPort) ?? 22,
-                                                user: state.inputServerUser,
-                                                authType: state.inputServerAuthType,
-                                                password: state.inputServerPassword,
-                                                keyPath: state.inputServerKeyPath,
-                                                urlString: state.inputServerUrl,
-                                                apiKey: state.inputServerKey
-                                            )
-                                            _ = await state.testServer(server: temp)
-                                        }
-                                    } label: {
-                                        if state.isTestingServer {
-                                            ProgressView()
-                                                .scaleEffect(0.5)
-                                                .frame(width: 45)
-                                        } else {
-                                            Text(state.t(.testBtn))
-                                                .font(.system(size: 9, weight: .bold))
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 4)
-                                                .background(Color.secondary.opacity(0.15))
-                                                .foregroundColor(.primary)
-                                                .cornerRadius(4)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                    
-                                    Spacer()
-                                    
-                                    if !state.servers.isEmpty {
-                                        Button {
-                                            withAnimation {
-                                                state.cancelServerEdit()
-                                            }
-                                        } label: {
-                                            Text(state.t(.cancelBtn))
-                                                .font(.system(size: 9))
-                                                .foregroundColor(.secondary)
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 4)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                    
-                                    Button {
-                                        let isSsh = state.inputServerConnectionType == .ssh
-                                        let hostOrUrlValid = isSsh ? !state.inputServerHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty : !state.inputServerUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                                        guard hostOrUrlValid else { return }
-                                        
-                                        state.addOrUpdateServer(
-                                            id: state.editingServerId,
-                                            name: state.inputServerName,
-                                            connectionType: state.inputServerConnectionType,
-                                            host: state.inputServerHost,
-                                            port: Int(state.inputServerPort) ?? 22,
-                                            user: state.inputServerUser,
-                                            authType: state.inputServerAuthType,
-                                            password: state.inputServerPassword,
-                                            keyPath: state.inputServerKeyPath,
-                                            urlString: state.inputServerUrl,
-                                            apiKey: state.inputServerKey
-                                        )
-                                        state.cancelServerEdit()
-                                    } label: {
-                                        Text(state.t(.saveServerBtn))
-                                            .font(.system(size: 9, weight: .heavy))
-                                            .padding(.horizontal, 10)
-                                            .padding(.vertical, 4)
-                                            .background(state.inputServerConnectionType == .ssh ? Color.orange : Color.cyan)
-                                            .foregroundColor(.black)
-                                            .cornerRadius(4)
-                                    }
-                                    .buttonStyle(.plain)
-                                    .disabled(state.inputServerConnectionType == .ssh ? state.inputServerHost.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty : state.inputServerUrl.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                                }
-                            }
-                            .padding(8)
-                            .background(Color.secondary.opacity(0.06))
-                            .cornerRadius(6)
                         }
                     }
-                } else {
-                    // Normal Telemetry View
-                    if let server = state.activeServer {
-                        // Multi-server switcher pills if more than 1 server
-                        if state.servers.count > 1 {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 4) {
-                                    ForEach(state.servers) { s in
-                                        let isSelected = (state.selectedServerId == s.id)
-                                        Button {
-                                            state.selectServer(id: s.id)
-                                        } label: {
-                                            Text(s.name)
-                                                .font(.system(size: 8, weight: isSelected ? .bold : .regular, design: .monospaced))
-                                                .padding(.horizontal, 6)
-                                                .padding(.vertical, 2)
-                                                .background(isSelected ? Color.cyan.opacity(0.2) : Color.secondary.opacity(0.1))
-                                                .foregroundColor(isSelected ? Color.cyan : Color.secondary)
-                                                .cornerRadius(3)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        if license.isPro {
-                            if let vps = state.vps {
-                                HStack(spacing: 8) {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("RAM")
-                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.secondary)
-                                        Text(vps.ram != nil ? "\(Int(vps.ram!.used_mb))/\(Int(vps.ram!.total_mb))M" : "--")
-                                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("LOAD")
-                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.secondary)
-                                        Text(vps.load?.first != nil ? String(format: "%.2f", vps.load!.first!) : "--")
-                                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("DISK")
-                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.secondary)
-                                        Text(vps.disk != nil ? "\(Int(vps.disk!.used_gb))/\(Int(vps.disk!.total_gb))G" : "--")
-                                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                    }
-                                    Spacer()
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text("UPTIME")
-                                            .font(.system(size: 8, weight: .bold, design: .monospaced))
-                                            .foregroundColor(.secondary)
-                                        Text(vps.uptime ?? "--")
-                                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                                            .lineLimit(1)
-                                    }
-                                }
-                                .padding(6)
-                                .background(Color.secondary.opacity(0.08))
-                                .cornerRadius(6)
-                            } else {
-                                HStack {
-                                    Text("\(state.t(.connectingTo)) \(server.name)...")
-                                        .font(.system(size: 10))
+                    
+                    if license.isPro {
+                        if let vps = state.vps {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("RAM")
+                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
                                         .foregroundColor(.secondary)
-                                    Spacer()
-                                    Button(state.t(.checkBtn)) {
-                                        state.refreshVps()
-                                    }
-                                    .font(.system(size: 9, weight: .bold))
-                                    .buttonStyle(.plain)
-                                    .foregroundColor(.cyan)
+                                    Text(vps.ram != nil ? "\(Int(vps.ram!.used_mb))/\(Int(vps.ram!.total_mb))M" : "--")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
                                 }
-                                .padding(6)
-                            }
-                        } else {
-                            // Locked Promo Box
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(state.t(.vpsPromoDesc))
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.secondary)
-                                
-                                Button {
-                                    withAnimation {
-                                        license.showActivationSheet = true
-                                    }
-                                } label: {
-                                    HStack(spacing: 4) {
-                                        Image(systemName: "lock.open.fill")
-                                        Text(state.t(.unlockVpsPro))
-                                    }
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.yellow)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(6)
-                                    .background(Color.yellow.opacity(0.1))
-                                    .cornerRadius(6)
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("LOAD")
+                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                    Text(vps.load?.first != nil ? String(format: "%.2f", vps.load!.first!) : "--")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
                                 }
-                                .buttonStyle(.plain)
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("DISK")
+                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                    Text(vps.disk != nil ? "\(Int(vps.disk!.used_gb))/\(Int(vps.disk!.total_gb))G" : "--")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                }
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("UPTIME")
+                                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.secondary)
+                                    Text(vps.uptime ?? "--")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                        .lineLimit(1)
+                                }
                             }
                             .padding(6)
-                            .background(Color.secondary.opacity(0.04))
+                            .background(Color.secondary.opacity(0.08))
                             .cornerRadius(6)
+                        } else {
+                            HStack {
+                                Text("\(state.t(.connectingTo)) \(server.name)...")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Button(state.t(.checkBtn)) {
+                                    state.refreshVps()
+                                }
+                                .font(.system(size: 9, weight: .bold))
+                                .buttonStyle(.plain)
+                                .foregroundColor(.cyan)
+                            }
+                            .padding(6)
                         }
                     } else {
-                        // Empty State: No Server Configured
-                        VStack(spacing: 6) {
-                            HStack {
-                                Image(systemName: "server.rack")
-                                    .foregroundColor(.cyan)
-                                Text(state.t(.noServerEmptyTitle))
-                                    .font(.system(size: 10, weight: .semibold))
-                                Spacer()
-                            }
-                            Text(state.t(.noServerEmptyDesc))
-                                .font(.system(size: 9))
+                        // Locked Promo Box
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(state.t(.vpsPromoDesc))
+                                .font(.system(size: 10))
                                 .foregroundColor(.secondary)
                             
                             Button {
                                 withAnimation {
-                                    state.isConfiguringServers = true
-                                    state.startAddServer()
+                                    license.showActivationSheet = true
                                 }
                             } label: {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "plus.circle.fill")
-                                    Text(state.t(.configureVpsBtn))
+                                    Image(systemName: "lock.open.fill")
+                                    Text(state.t(.unlockVpsPro))
                                 }
                                 .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.yellow)
                                 .frame(maxWidth: .infinity)
                                 .padding(6)
-                                .background(Color.cyan.opacity(0.15))
-                                .foregroundColor(.cyan)
+                                .background(Color.yellow.opacity(0.1))
                                 .cornerRadius(6)
                             }
                             .buttonStyle(.plain)
                         }
                         .padding(6)
+                        .background(Color.secondary.opacity(0.04))
+                        .cornerRadius(6)
                     }
+                } else {
+                    // Empty State: No Server Configured
+                    VStack(spacing: 6) {
+                        HStack {
+                            Image(systemName: "server.rack")
+                                .foregroundColor(.cyan)
+                            Text(state.t(.noServerEmptyTitle))
+                                .font(.system(size: 10, weight: .semibold))
+                            Spacer()
+                        }
+                        Text(state.t(.noServerEmptyDesc))
+                            .font(.system(size: 9))
+                            .foregroundColor(.secondary)
+                        
+                        Button {
+                            openServerManager(startAdding: true)
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "plus.circle.fill")
+                                Text(state.t(.configureVpsBtn))
+                            }
+                            .font(.system(size: 10, weight: .bold))
+                            .frame(maxWidth: .infinity)
+                            .padding(6)
+                            .background(Color.cyan.opacity(0.15))
+                            .foregroundColor(.cyan)
+                            .cornerRadius(6)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(6)
                 }
             }
             .padding(10)
@@ -1108,7 +819,7 @@ public struct CoreDeckView: View {
                     }
                     .buttonStyle(.plain)
                     
-                    Text("v2.1 Native Swift")
+                    Text("v2.2 Native Swift")
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundColor(.secondary.opacity(0.5))
                 }

@@ -11,5 +11,10 @@ struct CoreDeckApp: App {
             Text(state.menuBarText)
         }
         .menuBarExtraStyle(.window)
+        
+        Window("CoreDeck — VPS", id: "vps-manager") {
+            ServerManagerWindow(state: state)
+        }
+        .windowResizability(.contentSize)
     }
 }
