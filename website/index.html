@@ -54,11 +54,12 @@
         <img src="app-icon.png" alt="CoreDeck App Icon" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl shadow-lg shadow-cyan-500/20 object-contain">
         <div class="flex items-center gap-1.5 sm:gap-2">
           <span class="font-mono font-black tracking-wider text-sm sm:text-base">COREDECK</span>
-          <span class="text-[9px] sm:text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">v2.1</span>
+          <span class="text-[9px] sm:text-[10px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-1.5 py-0.5 rounded-full">v2.2</span>
         </div>
       </div>
 
       <nav class="hidden md:flex items-center gap-8 text-sm text-slate-400 font-medium">
+        <a href="#whats-new" class="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">What's New v2.2</a>
         <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
         <a href="#vps" class="hover:text-cyan-400 transition-colors">VPS Fleet</a>
         <a href="#vram" class="hover:text-cyan-400 transition-colors">VRAM &amp; Cache</a>
@@ -105,7 +106,7 @@
       <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-none mx-auto w-full">
         <a href="CoreDeck-Installer.dmg" download class="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-bold text-sm shadow-xl shadow-cyan-500/20 transition-all transform hover:-translate-y-0.5">
           <svg class="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-          Download Free DMG (2.9 MB)
+          Download Free DMG (3.1 MB)
         </a>
 
         <a id="heroProBtn" href="https://buy.stripe.com/4gM3cw8U59AgcZ858z3AY02" class="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold text-sm shadow-xl shadow-yellow-500/15 transition-all transform hover:-translate-y-0.5">
@@ -246,11 +247,94 @@
           <span class="text-yellow-400 font-bold">⭐️ Pro License (Active)</span>
           <div class="flex items-center gap-1.5">
             <span class="px-1.5 py-0.5 bg-slate-800 rounded text-slate-300">🇬🇧 EN / 🇵🇱 PL</span>
-            <span class="hidden xs:inline">v2.0 Swift</span>
+            <span class="hidden xs:inline">v2.2 Swift</span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- What's New in v2.2: Redesigned VPS Login Window -->
+    <section id="whats-new" class="py-12 sm:py-16">
+      <div class="relative rounded-3xl border border-cyan-500/25 bg-gradient-to-b from-slate-900/80 via-deckCard/95 to-slate-950/90 p-6 sm:p-10 shadow-2xl overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-72 h-72 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="text-center max-w-2xl mx-auto mb-8 sm:mb-10">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-[10px] sm:text-xs font-mono font-bold uppercase tracking-wider mb-4">
+            <span>🚀 JUST RELEASED &bull; COREDECK v2.2</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-black text-white tracking-tight">
+            Connect any Linux VPS in 15 seconds.
+          </h2>
+          <p class="mt-3 text-xs sm:text-sm text-slate-400 leading-relaxed">
+            We rebuilt the VPS setup experience from scratch into a dedicated native macOS window — zero cramped popovers, zero SSH guesswork, and full macOS Keychain encryption.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <!-- New VPS Manager Window Graphic -->
+          <div class="lg:col-span-7 relative group">
+            <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500/30 via-blue-500/20 to-orange-500/25 rounded-2xl blur-xl opacity-70 group-hover:opacity-95 transition-opacity"></div>
+            <img
+              src="vps-manager-v22.jpg"
+              alt="CoreDeck v2.2 Dedicated VPS Manager Window with Magic Paste and macOS Keychain"
+              class="relative w-full rounded-2xl border border-slate-700/80 shadow-2xl object-cover"
+              loading="lazy"
+            />
+          </div>
+
+          <!-- v2.2 Highlights -->
+          <div class="lg:col-span-5 space-y-4">
+            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+              <div class="flex items-start gap-3">
+                <span class="text-lg shrink-0">✨</span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">Magic Paste SSH Parser</h3>
+                  <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Paste <code class="text-cyan-300 font-mono">ssh root@ip</code>, <code class="text-cyan-300 font-mono">user@host:2222</code>, or a raw IP directly from Hostinger, Hetzner, DigitalOcean, or OVH — CoreDeck auto-fills user, host, and port instantly.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+              <div class="flex items-start gap-3">
+                <span class="text-lg shrink-0">🪟</span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">Dedicated Floating macOS Window</h3>
+                  <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Switch freely to your browser to copy passwords or browse <code class="text-cyan-300 font-mono">~/.ssh</code> keys — the setup window stays open until you click <strong class="text-cyan-300">Connect &amp; Save</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+              <div class="flex items-start gap-3">
+                <span class="text-lg shrink-0">🔐</span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">macOS Keychain &amp; Human Diagnostics</h3>
+                  <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Passwords and tokens are encrypted in macOS Keychain. If a connection fails, CoreDeck translates raw SSH errors into plain-English hints (wrong password vs firewall/port).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-900/70 border border-slate-800/80">
+              <div class="flex items-start gap-3">
+                <span class="text-lg shrink-0">🔥</span>
+                <div>
+                  <h3 class="text-sm font-bold text-white">Smart Status Tips &amp; Process Severity Icons</h3>
+                  <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Hover the load badge for actionable RAM/Swap tips, and spot heavy memory hogs at a glance with dynamic 🔥 and ⚠️ indicators.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Feature Highlights -->
     <div id="features" class="py-12 sm:py-16">
